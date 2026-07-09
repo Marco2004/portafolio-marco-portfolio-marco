@@ -21,7 +21,8 @@ Professional portfolio site with a private admin dashboard: all public-site cont
 
 - [Español](#español-1)
   - [Descripción](#descripción)
-  - [Stack](#stack)
+  - [Arquitectura](#arquitectura)
+  - [Tecnologías](#tecnologías)
   - [Funcionalidades](#funcionalidades)
   - [Estructura del proyecto](#estructura-del-proyecto)
   - [Instalación (XAMPP)](#instalación-xampp)
@@ -30,9 +31,12 @@ Professional portfolio site with a private admin dashboard: all public-site cont
   - [Seguridad](#seguridad)
   - [Capturas de pantalla](#capturas-de-pantalla)
   - [Verificación y pruebas](#verificación-y-pruebas)
+  - [Problemas comunes](#problemas-comunes)
   - [Limitaciones conocidas](#limitaciones-conocidas)
+  - [Posibles mejoras futuras](#posibles-mejoras-futuras)
 - [English](#english-1)
   - [Description](#description)
+  - [Architecture](#architecture)
   - [Tech stack](#tech-stack)
   - [Features](#features)
   - [Project structure](#project-structure)
@@ -42,7 +46,9 @@ Professional portfolio site with a private admin dashboard: all public-site cont
   - [Implemented security](#implemented-security-1)
   - [Screenshots](#screenshots-1)
   - [Verification and testing](#verification-and-testing)
+  - [Troubleshooting](#troubleshooting)
   - [Known limitations](#known-limitations)
+  - [Roadmap](#roadmap)
 - [Licencia / License](#licencia--license)
 
 ---
@@ -55,23 +61,52 @@ Sitio de portafolio de un solo administrador (no multiusuario, por diseño), pen
 
 **[Ver capturas de pantalla](#capturas-de-pantalla)** · **[Instalación](#instalación-xampp)** · **[Seguridad](#seguridad)**
 
-### Stack
+### Arquitectura
 
-| Capa | Tecnología |
+Arquitectura simple en capas, sin framework: rutas PHP planas, una capa de
+lógica en `src/`, y persistencia en MySQL/MariaDB vía PDO.
+
+```mermaid
+flowchart LR
+    Visitor["Visitante\n(navegador)"] -->|HTTP| Public["public/index.php\nRenderizado server-side"]
+    Public --> PortfolioClass["src/Portfolio.php\nLectura de contenido"]
+    Public --> CvClass["src/Cv.php\nCV en PDF"]
+    PortfolioClass --> DB[("MySQL / MariaDB")]
+    CvClass --> DB
+    Admin["Administrador"] -->|login + 2FA| AdminPanel["admin/*.php\nDashboard privado"]
+    AdminPanel -->|AJAX + CSRF| API["api/save.php\nGuardado de contenido"]
+    API --> PortfolioClass
+    AdminPanel -->|iframe| Public
+    API --> Mailer["src/Mailer.php\nBrevo API"]
+    AdminPanel --> Auth["src/auth.php\nSesiones · 2FA · tokens"]
+    Auth --> DB
+```
+
+| Módulo | Responsabilidad |
 |---|---|
-| Backend | PHP 8 puro + PDO (sin framework, sin Composer, sin build step) |
-| Base de datos | MySQL / MariaDB |
-| Frontend | HTML + CSS y JavaScript vanilla, organizados por archivo |
-| Correo | [Brevo](https://www.brevo.com) (API HTTP transaccional, plan gratuito) vía cURL nativo de PHP |
-| Config | Variables de entorno (`.env`), sin secretos en el código versionado |
+| `public/index.php` | Renderiza el sitio público completo server-side desde la base de datos. |
+| `admin/*.php` | Dashboard privado: login, verificación de correo, setup, recuperación de contraseña, edición de contenido. |
+| `api/*.php` | Endpoints JSON usados por el dashboard: `portfolio.php` (lectura), `save.php` (guardado con CSRF), `upload-*.php` (subida de imágenes). |
+| `src/Portfolio.php` | Lógica de lectura/escritura del contenido del portafolio. |
+| `src/auth.php` | Autenticación: login en dos pasos, sesiones, tokens de verificación/recuperación. |
+| `src/Mailer.php` | Envío de correos transaccionales vía la API HTTP de Brevo. |
+| `src/Cv.php` | Genera el CV en PDF a partir de los mismos datos del dashboard. |
+| `src/db.php` | Conexión PDO a MySQL/MariaDB. |
+| `src/config.php` | Carga de variables de entorno (`.env`). |
+
+### Tecnologías
+
+| Tecnología | Rol en el proyecto | Por qué se eligió |
+|---|---|---|
+| **PHP 8** | Backend puro, sin framework. | Se sirve nativamente en cualquier hosting compartido/XAMPP sin paso de build ni dependencias que instalar — encaja con un proyecto de un solo administrador donde no hace falta la estructura de un framework completo. |
+| **PDO** | Acceso a base de datos con sentencias preparadas. | Evita SQL injection sin depender de un ORM, y es agnóstico de motor (MySQL/MariaDB) si algún día cambia el hosting. |
+| **MySQL / MariaDB** | Persistencia de todo el contenido del portafolio. | Disponible por defecto en prácticamente cualquier hosting compartido y en XAMPP; suficiente para el volumen de datos de un portafolio personal. |
+| **HTML + CSS + JavaScript vanilla** | Frontend del sitio público y del dashboard. | Sin bundler ni dependencias de Node que instalar/actualizar; los archivos se sirven tal cual, lo que simplifica el despliegue en hosting gratuito. |
+| **[Brevo](https://www.brevo.com)** (API HTTP) | Envío de correos transaccionales (verificación, 2FA, recuperación de contraseña). | Muchos hosts gratuitos bloquean los puertos SMTP salientes, pero nunca el puerto 443/HTTPS que usa esta API — así el envío de correo funciona igual en local que en un hosting gratuito real. |
+| **Variables de entorno (`.env`)** | Separación de configuración/secretos del código. | Permite subir el código fuente completo a un repositorio público sin exponer credenciales de base de datos ni API keys. |
 
 No hay paso de build ni bundler: los archivos se sirven tal cual desde
 Apache, exactamente como están en el repositorio.
-
-El correo se manda por API HTTP (Brevo) en vez de SMTP a propósito: muchos
-hosts gratuitos (Google Cloud incluido) bloquean los puertos SMTP salientes,
-pero nunca el puerto 443/HTTPS que usa esta API — así el envío de correo
-funciona igual en local que en un hosting gratuito real.
 
 ### Funcionalidades
 
@@ -146,7 +181,12 @@ portafolio-marco/
 **Requisitos:** PHP 8.0+, MySQL/MariaDB, Apache con `mod_rewrite`/`mod_headers`
 (cualquier instalación estándar de XAMPP los trae).
 
-1. Copia el proyecto a `htdocs/` (ej. `C:\xampp\htdocs\portafolio-marco`).
+1. Clona el repositorio dentro de `htdocs/` (ej. `C:\xampp\htdocs\`):
+   ```bash
+   git clone https://github.com/Marco2004/portafolio-marco-portfolio-marco.git
+   cd portafolio-marco-portfolio-marco
+   ```
+   También puedes descargar el `.zip` desde GitHub (botón `Code` → `Download ZIP`) y descomprimirlo dentro de `htdocs/` si no tienes Git instalado.
 2. Crea la base de datos e impórtala:
    ```bash
    mysql -u root -e "CREATE DATABASE portafolio"
@@ -173,6 +213,18 @@ sigue funcionando igual, es la misma página). En XAMPP local, dentro de una
 subcarpeta de `htdocs`, seguí usando la ruta con `/public/` como en el paso 5
 (la reescritura asume que el proyecto vive en la raíz del document root).
 
+**Instalación en un vistazo**
+
+```text
+git clone ...            → descarga el código
+CREATE DATABASE + schema → crea la estructura de la base de datos
+copy .env.example .env   → crea tu configuración local privada
+editar .env               → define DB_*, BREVO_API_KEY, ADMIN_ACCESS_KEY...
+admin/setup.php           → crea la única cuenta de administrador
+admin/login.php            → dashboard listo para editar contenido
+public/index.php           → sitio público en vivo
+```
+
 ### Variables de entorno
 
 Definidas en `.env` (ver `.env.example`), leídas por `src/config.php`:
@@ -195,7 +247,7 @@ normalidad pero ningún correo (verificación de cuenta, códigos de acceso,
 recuperación de contraseña) podrá enviarse — necesarios para poder iniciar
 sesión. El correo se manda vía la API HTTP de Brevo en vez de SMTP para que
 funcione igual en hosts gratuitos que bloquean puertos SMTP salientes (ver
-[Stack](#stack)). El plan gratuito de Brevo agrega un pequeño pie de página
+[Tecnologías](#tecnologías)). El plan gratuito de Brevo agrega un pequeño pie de página
 "Sent with Brevo" a cada correo — informativo, no es un error.
 
 ### Uso del dashboard
@@ -296,6 +348,43 @@ verificación se hace:
 - Revisión manual en el navegador del flujo completo, en ambos temas, ambos
   idiomas y al menos un ancho de escritorio y uno de celular.
 
+### Problemas comunes
+
+#### `admin/setup.php` no muestra el formulario
+
+Ya existe una cuenta de administrador (el formulario desaparece
+automáticamente en cuanto hay una). Usá `admin/login.php` en su lugar, o si
+es una instalación local nueva, revisá que importaste una base de datos
+limpia (`database/schema.sql` sin `seed.sql`, o una BD recién creada).
+
+#### No llegan correos (verificación, 2FA, recuperación)
+
+Revisá que `BREVO_API_KEY` y `MAIL_FROM_EMAIL` estén configurados en `.env`
+(ver [Variables de entorno](#variables-de-entorno)) y que `MAIL_FROM_EMAIL`
+sea exactamente el remitente verificado en tu cuenta de Brevo. Sin estas dos
+variables, el sitio funciona con normalidad pero ningún correo puede
+enviarse — y sin correo no se puede iniciar sesión (verificación obligatoria).
+
+#### `/admin` responde 404 aunque la ruta es correcta
+
+Si configuraste `ADMIN_ACCESS_KEY` en `.env`, necesitás abrir primero
+`/admin/login.php?key=TU_CLAVE` una vez para que el navegador reciba la
+cookie que lo recuerda (ver [Uso del dashboard](#uso-del-dashboard)). Es el
+comportamiento esperado, no un error.
+
+#### Error CSRF al guardar contenido
+
+Recargá la página del dashboard e intentá de nuevo — el token CSRF expira
+con la sesión. Los formularios deben enviarse desde las pantallas del
+sistema (no copiando el HTML fuera del dashboard) para incluir el token
+correcto.
+
+#### La vista previa en vivo no carga dentro del dashboard
+
+Confirmá que estás accediendo al dashboard por la misma URL/dominio que el
+sitio público — la vista previa carga `public/index.php` en un `<iframe>`,
+así que un mismatch de host/puerto puede bloquearla.
+
 ### Limitaciones conocidas
 
 - Sin build/bundler: los archivos CSS/JS se sirven sin minificar ni
@@ -308,6 +397,19 @@ verificación se hace:
   en varias plantillas — eliminarlo del todo requeriría mover ese código a
   archivos/clases separados.
 
+### Posibles mejoras futuras
+
+Ideas de evolución natural para este proyecto, fuera del alcance actual:
+
+- Suite de pruebas automatizadas (PHPUnit) e integración continua.
+- Minificación/concatenación de CSS y JS para producción.
+- Endurecer el Content-Security-Policy eliminando `'unsafe-inline'`,
+  moviendo estilos y scripts inline a archivos separados.
+- Exportar el CV también en formatos adicionales (ej. `.docx`).
+- Rate limiting a nivel de IP para los formularios de autenticación
+  (además del bloqueo temporal ya existente por intentos fallidos).
+- Contenedor Docker para instalación reproducible sin depender de XAMPP.
+
 ---
 
 ## English
@@ -318,23 +420,52 @@ Single-administrator portfolio site (not multiuser, by design), built so one per
 
 **[Screenshots](#screenshots-1)** · **[Installation](#installation-xampp)** · **[Security](#implemented-security-1)**
 
+### Architecture
+
+Simple layered architecture, no framework: flat PHP routes, a logic layer in
+`src/`, and persistence in MySQL/MariaDB through PDO.
+
+```mermaid
+flowchart LR
+    Visitor["Visitor\n(browser)"] -->|HTTP| Public["public/index.php\nServer-side rendering"]
+    Public --> PortfolioClass["src/Portfolio.php\nContent reads"]
+    Public --> CvClass["src/Cv.php\nPDF résumé"]
+    PortfolioClass --> DB[("MySQL / MariaDB")]
+    CvClass --> DB
+    Admin["Administrator"] -->|login + 2FA| AdminPanel["admin/*.php\nPrivate dashboard"]
+    AdminPanel -->|AJAX + CSRF| API["api/save.php\nContent saving"]
+    API --> PortfolioClass
+    AdminPanel -->|iframe| Public
+    API --> Mailer["src/Mailer.php\nBrevo API"]
+    AdminPanel --> Auth["src/auth.php\nSessions · 2FA · tokens"]
+    Auth --> DB
+```
+
+| Module | Responsibility |
+|---|---|
+| `public/index.php` | Renders the full public site server-side from the database. |
+| `admin/*.php` | Private dashboard: login, email verification, setup, password recovery, content editing. |
+| `api/*.php` | JSON endpoints used by the dashboard: `portfolio.php` (reads), `save.php` (CSRF-protected saves), `upload-*.php` (image uploads). |
+| `src/Portfolio.php` | Reads/writes the portfolio content. |
+| `src/auth.php` | Authentication: two-step login, sessions, verification/recovery tokens. |
+| `src/Mailer.php` | Sends transactional email through Brevo's HTTP API. |
+| `src/Cv.php` | Generates the PDF résumé from the same dashboard data. |
+| `src/db.php` | PDO connection to MySQL/MariaDB. |
+| `src/config.php` | Loads environment variables (`.env`). |
+
 ### Tech stack
 
-| Layer | Technology |
-|---|---|
-| Backend | Plain PHP 8 + PDO (no framework, no Composer, no build step) |
-| Database | MySQL / MariaDB |
-| Frontend | HTML + CSS and vanilla JavaScript, organized by file |
-| Mail | [Brevo](https://www.brevo.com) (transactional HTTP API, free plan) via plain PHP cURL |
-| Config | Environment variables (`.env`), no secrets in versioned code |
+| Technology | Role in the project | Why it was chosen |
+|---|---|---|
+| **PHP 8** | Plain backend, no framework. | Runs natively on any shared host/XAMPP with no build step or dependencies to install — fits a single-administrator project that doesn't need the structure of a full framework. |
+| **PDO** | Database access with prepared statements. | Prevents SQL injection without depending on an ORM, and stays engine-agnostic (MySQL/MariaDB) in case the host changes later. |
+| **MySQL / MariaDB** | Persists all portfolio content. | Available by default on virtually any shared host and in XAMPP; enough for the data volume of a personal portfolio. |
+| **HTML + CSS + vanilla JavaScript** | Frontend for both the public site and the dashboard. | No bundler or Node dependencies to install/update; files are served as-is, simplifying deployment on free hosting. |
+| **[Brevo](https://www.brevo.com)** (HTTP API) | Transactional email (verification, 2FA, password recovery). | Many free hosts block outbound SMTP ports, but never port 443/HTTPS, which this API uses — so mail sending behaves the same locally as on a real free-tier host. |
+| **Environment variables (`.env`)** | Keeps config/secrets out of the code. | Lets the full source code live in a public repo without exposing database credentials or API keys. |
 
 No build step or bundler: files are served as-is by Apache, exactly as they
 sit in the repository.
-
-Mail is sent over an HTTP API (Brevo) instead of SMTP on purpose: many free
-hosts (Google Cloud included) block outbound SMTP ports, but never port
-443/HTTPS, which this API uses — so mail sending behaves the same locally as
-on a real free-tier host.
 
 ### Features
 
@@ -408,7 +539,12 @@ portafolio-marco/
 **Requirements:** PHP 8.0+, MySQL/MariaDB, Apache with `mod_rewrite`/`mod_headers`
 (any standard XAMPP install includes these).
 
-1. Copy the project into `htdocs/` (e.g. `C:\xampp\htdocs\portafolio-marco`).
+1. Clone the repository into `htdocs/` (e.g. `C:\xampp\htdocs\`):
+   ```bash
+   git clone https://github.com/Marco2004/portafolio-marco-portfolio-marco.git
+   cd portafolio-marco-portfolio-marco
+   ```
+   You can also download the `.zip` from GitHub (`Code` → `Download ZIP` button) and extract it into `htdocs/` if you don't have Git installed.
 2. Create the database and import it:
    ```bash
    mysql -u root -e "CREATE DATABASE portafolio"
@@ -435,6 +571,18 @@ the public site directly at `https://mydomain.com/` — no need to write
 the same, it's the same page). On local XAMPP, inside a subfolder of
 `htdocs`, keep using the `/public/` path as in step 5 (the rewrite assumes
 the project lives at the document root).
+
+**Installation at a glance**
+
+```text
+git clone ...             → download the source code
+CREATE DATABASE + schema  → create the database structure
+copy .env.example .env    → create your local private config
+edit .env                  → set DB_*, BREVO_API_KEY, ADMIN_ACCESS_KEY...
+admin/setup.php             → create the single admin account
+admin/login.php              → dashboard ready to edit content
+public/index.php             → public site live
+```
 
 ### Environment variables
 
@@ -555,6 +703,42 @@ Verification is done through:
 - Manual browser review of the full flow, in both themes, both languages,
   and at least one desktop and one mobile width.
 
+### Troubleshooting
+
+#### `admin/setup.php` doesn't show the form
+
+An admin account already exists (the form disappears automatically once one
+does). Use `admin/login.php` instead, or if this is a fresh local install,
+confirm you imported a clean database (`database/schema.sql` without
+`seed.sql`, or a newly created DB).
+
+#### No emails arrive (verification, 2FA, recovery)
+
+Check that `BREVO_API_KEY` and `MAIL_FROM_EMAIL` are set in `.env` (see
+[Environment variables](#environment-variables)) and that `MAIL_FROM_EMAIL`
+exactly matches the sender you verified in your Brevo account. Without both
+variables, the site works normally but no email can be sent — and without
+email you can't log in (verification is mandatory).
+
+#### `/admin` returns a 404 even though the path is correct
+
+If you configured `ADMIN_ACCESS_KEY` in `.env`, you first need to open
+`/admin/login.php?key=YOUR_KEY` once so the browser gets the cookie that
+remembers it (see [Using the dashboard](#using-the-dashboard)). This is
+expected behavior, not a bug.
+
+#### CSRF error when saving content
+
+Reload the dashboard page and try again — the CSRF token expires with the
+session. Forms must be submitted from the actual dashboard screens (not
+copied HTML) so the correct token is included.
+
+#### The live preview doesn't load inside the dashboard
+
+Confirm you're accessing the dashboard through the same URL/domain as the
+public site — the preview loads `public/index.php` in an `<iframe>`, so a
+host/port mismatch can block it.
+
 ### Known limitations
 
 - No build/bundler: CSS/JS files are served unminified and unconcatenated
@@ -566,6 +750,19 @@ Verification is done through:
   `script-src` because the project uses inline `style=""` and `<script>`
   blocks across several templates — removing it entirely would require
   moving that code into separate files/classes.
+
+### Roadmap
+
+Natural next steps beyond the current scope:
+
+- Automated test suite (PHPUnit) and continuous integration.
+- CSS/JS minification and concatenation for production.
+- Tighten the Content-Security-Policy by removing `'unsafe-inline'`,
+  moving inline styles and scripts into separate files.
+- Export the résumé in additional formats (e.g. `.docx`).
+- IP-based rate limiting on authentication forms (on top of the existing
+  temporary lockout after failed attempts).
+- Docker container for a reproducible install without depending on XAMPP.
 
 ---
 
