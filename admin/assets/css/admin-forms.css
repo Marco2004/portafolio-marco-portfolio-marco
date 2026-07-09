@@ -1,0 +1,622 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  transition: max-width var(--duration-panel) ease;
+}
+.panel[hidden] {
+  display: none;
+}
+
+/* Con la vista previa oculta, .form-column (flex:1) ya ocupa el espacio
+   liberado, pero .panel seguía topado en un máximo fijo — el espacio extra
+   quedaba vacío en vez de aprovecharse. Igual que el colapso de la barra
+   lateral (.sidebar.is-collapsed en admin-layout.css), donde el hermano
+   flex:1 crece sin ningún tope encima: aquí quitamos el tope por completo
+   en vez de solo subirlo. Ver setPreviewOpen() en admin-sections.js. */
+.admin-body.preview-hidden .panel {
+  max-width: none;
+}
+
+/* Contenedores de tarjetas repetidas (Proyectos, Experiencia, Habilidades):
+   sin esto, las tarjetas quedaban pegadas unas a otras porque solo el borde
+   propio de cada .repeat-card las distinguía — Certificaciones ya tenía este
+   espaciado (antes con un style inline), ahora es la misma regla para todas. */
+[data-projects-list],
+[data-experience-list],
+[data-skills-list] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 20px;
+}
+
+.card__title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--soft);
+  margin: 0 0 14px;
+}
+
+/* auto-fit en vez de "1fr 1fr" fijo: agrega o quita columnas solas según el
+   ancho realmente disponible (mostrar/ocultar vista previa, contraer la
+   barra lateral, redimensionar la ventana) sin depender de un breakpoint ni
+   una clase de JS atada a un estado en particular. */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.translatable-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--soft);
+  margin: 0 0 7px;
+}
+
+.input, textarea.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border-2);
+  background: var(--bg-2);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+}
+.input:focus, textarea.input:focus {
+  border-color: var(--accent);
+}
+
+.chip-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 42px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--border-2);
+  background: var(--bg-2);
+}
+.chip-input:focus-within {
+  border-color: var(--accent);
+}
+
+.chip-list {
+  display: contents;
+}
+
+.chip-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.chip-tag__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--soft);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  transition: color var(--duration-fast) ease, background-color var(--duration-fast) ease;
+}
+.chip-tag__remove:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--red) 25%, transparent);
+}
+
+.chip-tag__icon {
+  display: inline-flex;
+  color: var(--soft);
+}
+
+.chip-input__text {
+  flex: 1;
+  min-width: 140px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  padding: 4px 2px;
+}
+.chip-input__text::placeholder {
+  color: var(--soft);
+}
+
+.repeat-card {
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.repeat-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 18px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.repeat-card__head-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--soft);
+  white-space: nowrap;
+}
+
+.repeat-card__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.repeat-card__body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.remove-btn {
+  border: none;
+  background: transparent;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.add-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 9px;
+  border: 1px dashed var(--border-2);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.add-btn:hover {
+  border-color: var(--accent);
+  background: var(--panel);
+}
+
+.add-link {
+  margin-top: 12px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12.5px;
+}
+
+.skill-cat-name-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.skill-cat-name-input {
+  flex: 1;
+  font-weight: 600;
+}
+.skill-items {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.mini-row-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.mini-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Certificaciones/cursos: nombre, institución, mes/año (para el orden
+   automático) y quitar — ya no llevan manija de arrastre (ver punto 14). */
+.mini-row--dated {
+  grid-template-columns: 1fr 1fr auto auto;
+}
+.mini-row--dated .datepicker {
+  min-width: 110px;
+}
+.mini-row--dated .datepicker [data-datepicker-text] {
+  width: 100%;
+}
+
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--soft);
+  cursor: grab;
+  flex-shrink: 0;
+}
+.drag-handle:hover {
+  color: var(--text);
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.repeat-card.is-dragging,
+.card.is-dragging,
+.mini-row.is-dragging {
+  opacity: 0.4;
+}
+
+.repeat-card.drag-over,
+.card.drag-over,
+.mini-row.drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
+
+/* El proyecto insignia no es draggable (ver projectRowHtml en
+   admin-forms.js) — este borde acentuado deja claro que es distinto de los
+   demás, que sí se pueden arrastrar por su manija. */
+.repeat-card--flagship {
+  border-color: var(--accent);
+}
+
+/* Rechazo al intentar marcar un segundo proyecto insignia (ver el listener
+   "change" de Proyectos en admin-forms.js) — sacudida corta horizontal,
+   misma escala de duración que el resto de las micro-interacciones. */
+@keyframes projectRejectShake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.repeat-card.is-shaking {
+  animation: projectRejectShake 0.42s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .repeat-card.is-shaking {
+    animation: none;
+  }
+}
+
+.mini-remove {
+  border: none;
+  background: transparent;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Selector de fecha DD/MM/AA (ver admin-datepicker.js) — punto 6. */
+.datepicker {
+  position: relative;
+}
+.datepicker-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  background: var(--panel);
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  padding: 10px;
+  width: 230px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+  transform-origin: top left;
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transition: opacity var(--duration-base) var(--ease-reveal), transform var(--duration-base) var(--ease-reveal);
+}
+.datepicker-popup.is-opening,
+.datepicker-popup.is-closing {
+  opacity: 0;
+  transform: scale(.95) translateY(-4px);
+}
+.datepicker-cal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.datepicker-cal__label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  text-transform: capitalize;
+}
+.datepicker-cal__nav {
+  border: none;
+  background: transparent;
+  color: var(--soft);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.datepicker-cal__nav:hover {
+  background: var(--bg-2);
+  color: var(--text);
+}
+.datepicker-cal__weekdays,
+.datepicker-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+.datepicker-cal__weekdays span {
+  font-size: 10px;
+  color: var(--soft);
+  padding: 2px 0;
+}
+.datepicker-cal__cell {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  padding: 5px 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.datepicker-cal__cell:hover {
+  background: var(--bg-2);
+}
+.datepicker-cal__cell.is-today {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+.datepicker-cal__cell.is-selected {
+  background: var(--accent);
+  color: var(--btn-text);
+}
+.datepicker-cal__cell--empty {
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  .datepicker-popup {
+    transition: none;
+  }
+}
+
+.flagship-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-2);
+}
+.flagship-fields[hidden] {
+  display: none;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.image-drop-zone {
+  width: 100%;
+  height: 150px;
+  border-radius: 8px;
+  border: 1px dashed var(--border-2);
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  font-size: 12.5px;
+  color: var(--soft);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+.image-drop-zone.is-dragover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* El fondo de esta píldora es un negro fijo que nunca cambia con el tema
+   (pensado para leerse igual encima de cualquier captura que se suba
+   después) — el texto por eso también debe quedar fijo en claro, en vez de
+   heredar var(--soft), que en modo claro es un gris oscuro casi ilegible
+   sobre ese mismo fondo negro. */
+.image-drop-zone__label {
+  background: rgba(1, 4, 9, 0.55);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+.image-drop-zone input[type="file"] {
+  display: none;
+}
+
+.appearance-intro {
+  margin: -4px 0 4px;
+  font-size: 13px;
+  color: var(--soft);
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+/* Texto de ayuda muted reutilizable — mismo tono en Apariencia y en
+   cualquier otra tarjeta que necesite una nota breve bajo su contenido
+   (ver .cv-current__footnote), en vez de repetir estilos inline sueltos. */
+.hint-text {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: var(--soft);
+  line-height: 1.6;
+  max-width: 60ch;
+}
+
+.appearance-help {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: var(--soft);
+  line-height: 1.6;
+  max-width: 60ch;
+}
+.appearance-help--footnote {
+  margin: -6px 0 0;
+}
+
+.appearance-status {
+  margin: 12px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--accent);
+}
+
+.appearance-choice {
+  display: flex;
+  gap: 10px;
+}
+.appearance-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid var(--border-2);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg-2);
+  color: var(--text);
+  transition: border-color var(--duration-fast) ease;
+}
+.appearance-btn.is-selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-2));
+}
+
+.appearance-btn__swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  flex-shrink: 0;
+}
+.appearance-btn__swatch--dark {
+  background: linear-gradient(135deg, #0d1117 50%, #161b22 50%);
+}
+.appearance-btn__swatch--light {
+  background: linear-gradient(135deg, #ffffff 50%, #eaeef2 50%);
+}
+
+.cv-current {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px dashed var(--border-2);
+  border-radius: 10px;
+}
+.cv-current__icon {
+  display: inline-flex;
+  color: var(--soft);
+}
+.cv-current__icon svg {
+  width: 26px;
+  height: 26px;
+}
+.cv-current__name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.cv-current__hint {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--soft);
+}
+.cv-current__footnote {
+  margin: 16px 0 0;
+}

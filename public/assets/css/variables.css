@@ -1,0 +1,71 @@
+:root {
+  --bg: #0d1117;
+  --bg-2: #010409;
+  --panel: #161b22;
+  --panel-2: #1c2330;
+  --border: #21262d;
+  --border-2: #30363d;
+  --text: #e6edf3;
+  --soft: #8b949e;
+
+  --kw: #ff7b72;
+  --fn: #d2a8ff;
+  --str: #a5d6ff;
+  --num: #79c0ff;
+  --var: #ffa657;
+  --green: #7ee787;
+  --red: #ff7b72;
+
+  --accent: #58a6ff;
+  --btn: #1f6feb;
+  --btn-text: #ffffff;
+
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-sm: 7px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --container-max: 1080px;
+
+  --ease-reveal: cubic-bezier(.22, .61, .36, 1);
+
+  /* Escala común de duraciones para toda la interfaz (ver README > Animaciones):
+     instant = feedback de presión, fast = hover/foco, base = paneles/iconos
+     pequeños, panel = entrada de tarjetas/toasts, reveal(-lg) = aparición al
+     hacer scroll. Un solo lugar para ajustar el "ritmo" general del sitio. */
+  --duration-instant: .1s;
+  --duration-fast: .15s;
+  --duration-base: .2s;
+  --duration-panel: .28s;
+  --duration-reveal: .5s;
+  --duration-reveal-lg: .7s;
+  /* Fundido claro/oscuro: deliberadamente más largo que el resto (no se
+     comparte con toasts/tarjetas) y con --ease-reveal en vez de un "ease"
+     genérico, para que el cambio de tema se sienta con el mismo lenguaje de
+     movimiento "premium" que usan las animaciones de scroll-reveal, no como
+     un efecto aparte. */
+  --duration-theme: 1s;
+}
+
+[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-2: #f6f8fa;
+  --panel: #f6f8fa;
+  --panel-2: #eaeef2;
+  --border: #d0d7de;
+  --border-2: #d8dee4;
+  --text: #1f2328;
+  --soft: #636c76;
+
+  --kw: #cf222e;
+  --fn: #8250df;
+  --str: #0a3069;
+  --num: #0550ae;
+  --var: #953800;
+  --green: #1a7f37;
+
+  --accent: #0969da;
+  --btn: #0969da;
+  --btn-text: #ffffff;
+}

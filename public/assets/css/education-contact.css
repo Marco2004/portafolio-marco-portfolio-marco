@@ -1,0 +1,223 @@
+.edu-cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 44px;
+}
+
+/* Antes había un único .edu-block fijo (un solo título/grado); ahora es una
+   lista libre (punto 9) y puede haber más de uno, así que necesita su propio
+   espaciado vertical entre tarjetas. */
+.edu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-bottom: 24px;
+}
+
+.edu-block {
+  border-left: 2px solid var(--accent);
+  padding-left: 20px;
+}
+
+.edu-block__degree {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.edu-block__org {
+  font-size: 14px;
+  color: var(--soft);
+  margin: 0 0 8px;
+}
+
+.edu-block__dates {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--soft);
+  margin: 0 0 10px;
+}
+
+.status-pill {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 5px 11px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
+}
+
+.lang-list {
+  margin-top: 32px;
+}
+
+.lang-list__label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--soft);
+  margin: 0 0 12px;
+}
+
+.lang-list__item {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+.lang-list__item strong {
+  font-weight: 600;
+}
+.lang-list__item span {
+  color: var(--soft);
+}
+
+.cert-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.cert-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cert-row:last-child {
+  border-bottom: none;
+}
+
+.cert-row__name {
+  font-size: 14px;
+  min-width: 0;
+}
+
+.cert-row__issuer {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--soft);
+  min-width: 0;
+  text-align: right;
+}
+
+.contact-title {
+  font-size: clamp(28px, 4.5vw, 46px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0 0 12px;
+  max-width: 18ch;
+}
+
+.contact-desc {
+  color: var(--soft);
+  font-size: 16px;
+  max-width: 54ch;
+  margin: 0 0 22px;
+}
+
+.availability-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+  max-width: 100%;
+}
+
+.availability-badge__text {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.availability-badge__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--green);
+  display: inline-block;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 22%, transparent);
+}
+
+.availability-badge__text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.contact-card {
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-2);
+  margin-top: 28px;
+}
+
+.contact-card__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.contact-card__bar .traffic-lights span {
+  width: 11px;
+  height: 11px;
+}
+.contact-card__bar-label {
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--soft);
+}
+
+.contact-links {
+  padding: 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 14px;
+}
+
+.contact-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  text-decoration: none;
+  transition: border-color var(--duration-fast) ease;
+}
+.contact-link:hover {
+  border-color: var(--accent);
+}
+
+.contact-link__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.contact-link__value {
+  font-size: 15px;
+  color: var(--accent);
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.contact-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+.contact-cta .btn-primary:hover {
+  transform: translateY(-1px);
+}

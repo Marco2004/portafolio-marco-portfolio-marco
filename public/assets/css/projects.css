@@ -1,0 +1,262 @@
+.flagship {
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--panel);
+  margin-bottom: 26px;
+}
+
+.flagship__bar {
+  padding: 8px 20px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flagship__bar-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 4px 0;
+}
+
+.flagship__body {
+  display: grid;
+  grid-template-columns: minmax(260px, 380px) 1fr;
+}
+
+.flagship__image {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  object-fit: cover;
+  background: var(--bg-2);
+}
+
+.flagship__content {
+  padding: 26px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.flagship__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.flagship__subtitle {
+  font-size: 14px;
+  color: var(--soft);
+  margin: 0;
+}
+
+/* Antes el proyecto insignia no mostraba las tecnologías (solo los proyectos
+   normales tenían .project-card__stack) — mismos chips, aquí debajo del
+   subtítulo para que se lean como "con qué se hizo" antes de la narrativa. */
+.flagship__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.flagship__narrative {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 14px;
+}
+
+.flagship__narrative-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--soft);
+  margin: 0 0 5px;
+}
+
+.flagship__narrative-text {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--soft);
+  margin: 0;
+}
+
+.flagship__stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+
+.flagship__stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--accent);
+}
+
+.flagship__stat-label {
+  font-size: 12px;
+  color: var(--soft);
+  margin: 2px 0 0;
+}
+
+.flagship__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 22px;
+}
+
+.project-card {
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--duration-base) ease, border-color var(--duration-base) ease;
+}
+.project-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+}
+
+.project-card__browser {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+}
+
+.project-card__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+}
+
+.project-card__domain {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--soft);
+}
+
+.project-card__image {
+  width: 100%;
+  height: 158px;
+  object-fit: cover;
+  background: var(--bg-2);
+  display: block;
+}
+
+.project-card__body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.project-card__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.project-card__title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.project-card__tag {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.project-card__text {
+  font-size: 14.5px;
+  line-height: 1.6;
+  margin: 0;
+  color: var(--soft);
+}
+.project-card__text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.project-card__impact {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--soft);
+}
+.project-card__impact-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 6px;
+}
+
+.project-card__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: auto;
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--str);
+}
+
+.project-card__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.image-drop {
+  position: relative;
+  overflow: hidden;
+}
+.image-drop__placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  font-size: 12.5px;
+  color: var(--soft);
+  background: var(--bg-2);
+}

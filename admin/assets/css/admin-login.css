@@ -1,0 +1,397 @@
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--auth-bg);
+}
+
+/* Switch de tema de las páginas de auth (ver auth-theme-toggle.js) — flotante
+   en la esquina en vez de meterlo en .login-card__bar, cuyo ancho (tarjeta de
+   380px máx.) ya está justo con los traffic lights + la etiqueta de cada
+   página (algunas tan largas como "verificación en dos pasos"). Mismo look
+   que .nav__icon-btn del sitio público / .theme-toggle-btn del dashboard:
+   ícono + etiqueta con el modo actual. */
+.auth-theme-toggle {
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-2);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color var(--duration-fast) ease;
+}
+.auth-theme-toggle:hover {
+  background: var(--panel-2);
+}
+@media (max-width: 480px) {
+  .auth-theme-toggle {
+    top: 14px;
+    right: 14px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  background: var(--panel);
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+  animation: cardIn var(--duration-reveal) var(--ease-reveal);
+}
+
+/* Entrada sutil tipo "fade + settle", no un rebote llamativo — nada más que
+   un ligero desplazamiento y escala para que la tarjeta se sienta pulida
+   sin distraer del formulario. */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-card {
+    animation: none;
+  }
+}
+
+.login-card__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.login-card__bar-label {
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--soft);
+}
+
+.login-card__body {
+  padding: 34px 30px 30px;
+}
+
+.login-card__header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 22px;
+}
+
+.login-card__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--btn);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.login-card__title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.login-card__subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--soft);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--soft);
+  margin: 0 0 7px;
+}
+
+.field input {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--border-2);
+  background: var(--bg-2);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--duration-fast) ease;
+}
+.field input:focus {
+  border-color: var(--accent);
+}
+
+.password-input {
+  position: relative;
+}
+.password-input input {
+  padding-right: 42px;
+}
+.password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--soft);
+  cursor: pointer;
+  border-radius: 0 8px 8px 0;
+  transition: color var(--duration-fast) ease, transform var(--duration-instant) ease;
+}
+.password-toggle:hover {
+  color: var(--text);
+}
+.password-toggle:active {
+  transform: scale(.9);
+}
+.password-toggle__icon--hide {
+  display: none;
+}
+.password-toggle.is-visible .password-toggle__icon--show {
+  display: none;
+}
+.password-toggle.is-visible .password-toggle__icon--hide {
+  display: block;
+}
+
+/* Medidor de fortaleza de contraseña — barra de 5 segmentos que se rellena y
+   cambia de color según --strength-level (0-5), puesto por password-strength.js.
+   Los segmentos usan un gradiente recortado con la misma paleta rojo->verde
+   que ya existe en variables.css, para que se sienta parte del mismo sistema
+   (no un plugin ajeno). */
+.password-strength {
+  margin-top: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: strengthIn var(--duration-base) ease;
+}
+@keyframes strengthIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.password-strength__bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  height: 5px;
+}
+.password-strength__bar span {
+  display: block;
+  border-radius: 999px;
+  background: var(--border-2);
+  overflow: hidden;
+  position: relative;
+}
+.password-strength__bar span::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  border-radius: inherit;
+  background: var(--red);
+  transition: transform var(--duration-panel) var(--ease-reveal), background-color var(--duration-panel) ease;
+}
+/* Cada uno de los 5 segmentos se "prende" cuando su índice es <= al nivel
+   actual, puesto como data-level="1..5" en el propio contenedor por el JS. */
+.password-strength__bar[data-level="1"] span:nth-child(-n+1)::before { transform: scaleX(1); }
+.password-strength__bar[data-level="2"] span:nth-child(-n+2)::before { transform: scaleX(1); }
+.password-strength__bar[data-level="3"] span:nth-child(-n+3)::before { transform: scaleX(1); }
+.password-strength__bar[data-level="4"] span:nth-child(-n+4)::before { transform: scaleX(1); }
+.password-strength__bar[data-level="5"] span:nth-child(-n+5)::before { transform: scaleX(1); }
+
+.password-strength.is-veryweak .password-strength__bar span::before { background: var(--red); }
+.password-strength.is-weak .password-strength__bar span::before { background: var(--amber); }
+.password-strength.is-fair .password-strength__bar span::before { background: var(--yellow); }
+.password-strength.is-strong .password-strength__bar span::before { background: var(--lime); }
+.password-strength.is-verystrong .password-strength__bar span::before { background: var(--green); }
+
+.password-strength__label {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  transition: color var(--duration-base) ease;
+}
+.password-strength.is-veryweak .password-strength__label { color: var(--red); }
+.password-strength.is-weak .password-strength__label { color: var(--amber); }
+.password-strength.is-fair .password-strength__label { color: var(--yellow); }
+.password-strength.is-strong .password-strength__label { color: var(--lime); }
+.password-strength.is-verystrong .password-strength__label { color: var(--green); }
+
+/* Pequeño "pulso" al subir de nivel para que el cambio se sienta vivo sin
+   ser ruidoso — se relanza cada vez que cambia la clase de nivel. */
+.password-strength[class*="is-"] .password-strength__bar {
+  animation: strengthPulse var(--duration-panel) ease;
+}
+@keyframes strengthPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .password-strength,
+  .password-strength__bar,
+  .password-strength__bar span::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.login-submit.is-disabled-hint {
+  cursor: not-allowed;
+}
+.login-submit:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  filter: none;
+}
+
+/* Spinner de "procesando" al enviar un formulario de auth — ver
+   form-loading.js. Oculta el texto del botón (color: transparent) y dibuja
+   un anillo girando encima en su lugar; el botón ya viene disabled así que
+   :disabled no pisa esta regla (el orden en la hoja no importa aquí porque
+   son propiedades distintas, pero is-loading debe ganar el color). */
+.login-submit.is-loading,
+.login-link-btn.is-loading {
+  position: relative;
+  color: transparent !important;
+  cursor: wait;
+}
+.login-submit.is-loading::after,
+.login-link-btn.is-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  animation: formSpin .6s linear infinite;
+}
+.login-submit.is-loading::after {
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+}
+.login-link-btn.is-loading::after {
+  border: 2px solid var(--border-2);
+  border-top-color: var(--accent);
+}
+@keyframes formSpin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-submit.is-loading::after,
+  .login-link-btn.is-loading::after {
+    animation: none;
+  }
+}
+
+.login-error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--red);
+}
+
+.login-submit {
+  margin-top: 6px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: var(--btn);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: filter var(--duration-fast) ease, transform var(--duration-instant) ease;
+}
+.login-submit:hover {
+  filter: brightness(1.08);
+}
+.login-submit:active {
+  transform: scale(.97);
+}
+
+.login-hint {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--soft);
+  text-align: center;
+}
+.login-hint a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.login-hint a:hover {
+  text-decoration: underline;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--soft);
+  cursor: pointer;
+}
+
+.login-link-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-2);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color var(--duration-fast) ease, transform var(--duration-instant) ease;
+}
+.login-link-btn:hover {
+  background: var(--panel-2);
+}
+.login-link-btn:active {
+  transform: scale(.97);
+}

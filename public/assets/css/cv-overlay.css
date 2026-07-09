@@ -1,0 +1,225 @@
+.cv-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #edece9;
+  overflow: auto;
+  scrollbar-color: #b8b6b0 #edece9;
+}
+
+.cv-overlay::-webkit-scrollbar-track {
+  background: #edece9;
+}
+.cv-overlay::-webkit-scrollbar-thumb {
+  background-color: #b8b6b0;
+  border: 3px solid #edece9;
+}
+.cv-overlay::-webkit-scrollbar-thumb:hover {
+  background-color: #97958f;
+}
+
+.cv-overlay[hidden] {
+  display: none;
+}
+
+.cv-overlay__bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  background: #0d1117;
+  color: #fff;
+}
+
+.cv-overlay__bar-title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.cv-overlay__bar-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.cv-overlay__lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.cv-overlay__download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #1f6feb;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: var(--font-sans);
+}
+
+.cv-overlay__close {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: var(--font-sans);
+}
+
+.cv-page {
+  max-width: 820px;
+  margin: 28px auto;
+  background: #fff;
+  color: #1a1a1a;
+  font-family: Georgia, 'Times New Roman', serif;
+  padding: 62px 60px;
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.16);
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .cv-page {
+    padding: 40px 24px;
+    margin: 0;
+  }
+}
+
+/* ---------- Contenido del currículum (formato actual de Marco) ---------- */
+
+.resume-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.resume-name {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
+}
+
+.resume-role {
+  font-size: 13.5px;
+  color: #333;
+  margin: 0 0 8px;
+}
+
+.resume-contact {
+  font-size: 12.5px;
+  color: #333;
+  margin: 0;
+}
+.resume-contact a {
+  color: #1a1a1a;
+}
+
+.resume-rule {
+  border: none;
+  border-top: 2px solid #1a1a1a;
+  margin: 14px 0 6px;
+}
+
+.resume-section-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #1a1a1a;
+  padding-bottom: 4px;
+  margin: 22px 0 10px;
+}
+
+.resume-paragraph {
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0 0 4px;
+  text-align: justify;
+}
+
+.resume-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.resume-row__title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.resume-row__date {
+  font-size: 12.5px;
+  color: #333;
+  white-space: nowrap;
+}
+
+.resume-meta {
+  font-size: 13px;
+  color: #333;
+  margin: 2px 0 6px;
+}
+
+.resume-bullets {
+  margin: 0 0 4px;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.resume-bullets li {
+  margin-bottom: 3px;
+}
+
+.resume-certs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 24px;
+}
+
+.resume-cert {
+  margin-top: 10px;
+}
+
+.resume-cert__name {
+  font-size: 13.5px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.resume-cert__issuer {
+  font-size: 12.5px;
+  color: #333;
+  margin: 2px 0 0;
+}
+
+@media (max-width: 640px) {
+  .resume-certs {
+    grid-template-columns: 1fr;
+  }
+}

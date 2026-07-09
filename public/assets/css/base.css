@@ -1,0 +1,209 @@
+* {
+  box-sizing: border-box;
+}
+
+/* Anillo de foco consistente en todo el sitio — solo con :focus-visible
+   (teclado/foco programático), no al hacer clic con mouse, para no mostrar
+   un anillo en cada clic pero sí garantizar que la navegación por teclado
+   siempre tenga un indicador claro (WCAG 2.4.7). Los componentes que ya
+   traen su propio indicador de foco (inputs con cambio de borde, etc.) lo
+   siguen usando igual; este es el mínimo para todo lo demás. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+html {
+  scrollbar-color: var(--border-2) var(--bg-2);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--bg-2);
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border-2);
+  border-radius: 999px;
+  border: 3px solid var(--bg-2);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--soft);
+}
+*::-webkit-scrollbar-corner {
+  background: var(--bg-2);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Al alternar tema, theme.js pone esta clase en <html> durante
+   --duration-theme para que TODO lo que cambia de color por el cambio de
+   tema (fondos —incluidos degradados como --auth-bg—, texto, bordes,
+   rellenos SVG) se anime al mismo ritmo, con la misma curva --ease-reveal
+   que el resto del sitio. Es !important a propósito: cada botón/input tiene
+   su propia transición corta (--duration-fast) para hover/foco, y sin pisarla
+   aquí esa transición "de paso" también se disparaba con el cambio de tema
+   — el fondo de la página cambiaba de golpe (sin transición propia) mientras
+   un botón cercano fundía a su propio ritmo de hover, descoordinado. Se
+   anima "background" completo (no solo background-color) porque el shorthand
+   con un degradado fija background-image, no background-color. Se quita sola
+   pasado ese tiempo para no frenar las transiciones normales de hover el
+   resto del tiempo. */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background var(--duration-theme) var(--ease-reveal), color var(--duration-theme) var(--ease-reveal), border-color var(--duration-theme) var(--ease-reveal), fill var(--duration-theme) var(--ease-reveal) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-transitioning,
+  .theme-transitioning * {
+    transition: none !important;
+  }
+}
+
+h1, h2, h3, p, ul {
+  margin: 0;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+}
+
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.section {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 56px 32px;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 80px;
+}
+
+.section-kicker {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.section-title {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+
+.section-intro {
+  color: var(--soft);
+  font-size: 16px;
+  max-width: 60ch;
+  margin: 0 0 36px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  font-family: var(--font-sans);
+  transition: filter var(--duration-base) ease, background-color var(--duration-base) ease, border-color var(--duration-base) ease, color var(--duration-base) ease, transform var(--duration-base) ease;
+}
+
+.btn-primary {
+  background: var(--btn);
+  color: var(--btn-text);
+  padding: 14px 24px;
+}
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.btn-ghost {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border-2);
+  padding: 14px 22px;
+}
+.btn-ghost:hover {
+  background: var(--panel-2);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  padding: 11px 18px;
+  font-size: 13.5px;
+}
+
+.btn-outline {
+  background: var(--bg-2);
+  color: var(--text);
+  border: 1px solid var(--border-2);
+  padding: 10px 16px;
+  font-size: 13px;
+}
+.btn-outline:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.traffic-lights {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.traffic-lights span {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.traffic-lights span:nth-child(1) { background: #ff5f57; }
+.traffic-lights span:nth-child(2) { background: #febc2e; }
+.traffic-lights span:nth-child(3) { background: #28c840; }
+
+.no-print {}
+
+@media print {
+  @page { margin: 16mm; }
+  .no-print { display: none !important; }
+  body.cv-open .portfolio-main { display: none !important; }
+  .cv-overlay { position: static !important; overflow: visible !important; padding: 0 !important; background: #fff !important; }
+  .cv-page { box-shadow: none !important; margin: 0 !important; max-width: none !important; padding: 0 !important; }
+}

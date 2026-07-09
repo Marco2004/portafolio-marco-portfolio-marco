@@ -1,0 +1,40 @@
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.hero__cursor {
+  color: var(--green);
+  animation: blink 1s step-end infinite;
+}
+
+/*
+ * Estado inicial de los bloques [data-reveal]: ocultos y desplazados.
+ * scroll-reveal.js los anima a opacity:1/transform:none la primera vez que
+ * entran al viewport (ver README de diseño: 0.7s cubic-bezier(.22,.61,.36,1),
+ * stagger de 90ms entre hermanos). Si JS no corre (o prefers-reduced-motion),
+ * este CSS por sí solo ya deja todo visible — .no-js hace ese fallback.
+ */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity var(--duration-reveal-lg) var(--ease-reveal), transform var(--duration-reveal-lg) var(--ease-reveal);
+  will-change: opacity, transform;
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+.no-js [data-reveal],
+.reduce-motion [data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}

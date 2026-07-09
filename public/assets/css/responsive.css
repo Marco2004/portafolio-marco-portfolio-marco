@@ -1,0 +1,44 @@
+@media (max-width: 760px) {
+  .container,
+  .section,
+  .hero {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .flagship__body {
+    grid-template-columns: 1fr;
+  }
+
+  .flagship__image {
+    min-height: 200px;
+  }
+
+  .timeline-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .hero__code-pre {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav__inner {
+    padding: 10px 16px;
+  }
+
+  .nav__links {
+    gap: 0;
+  }
+
+  .nav__link {
+    padding: 6px 9px;
+    font-size: 13px;
+  }
+
+  .hero {
+    padding-top: 48px;
+  }
+}

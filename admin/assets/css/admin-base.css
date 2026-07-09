@@ -1,0 +1,238 @@
+:root {
+  --bg: #0d1117;
+  --bg-2: #010409;
+  --panel: #161b22;
+  --panel-2: #1c2330;
+  --border: #21262d;
+  --border-2: #30363d;
+  --text: #e6edf3;
+  --soft: #8b949e;
+  --green: #7ee787;
+  --red: #ff7b72;
+  /* Escala intermedia solo para el medidor de fortaleza de contraseña
+     (rojo -> ámbar -> amarillo -> lima -> verde). */
+  --amber: #f0883e;
+  --yellow: #e3b341;
+  --lime: #56d364;
+  --accent: #58a6ff;
+  --btn: #1f6feb;
+  --btn-text: #ffffff;
+
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --ease-reveal: cubic-bezier(.22, .61, .36, 1);
+
+  /* Misma escala de duraciones que public/assets/css/variables.css — el
+     dashboard no comparte hoja de estilos con el sitio público, así que se
+     repite aquí para mantener el mismo ritmo de animación en todo el sistema. */
+  --duration-instant: .1s;
+  --duration-fast: .15s;
+  --duration-base: .2s;
+  --duration-panel: .28s;
+  --duration-reveal: .5s;
+  /* Mismo fundido de tema que public/assets/css/variables.css — ver esa
+     hoja para la explicación completa. */
+  --duration-theme: 1s;
+
+  /* Fondo de las pantallas de auth (login/setup/forgot-password/etc.) — antes
+     estaba fijo en admin-login.css sin variable, por lo que nunca cambiaba
+     con el tema y esas pantallas se veían siempre oscuras aunque el sistema
+     estuviera en modo claro. */
+  --auth-bg: radial-gradient(circle at 20% 20%, #131a24 0%, #0d1117 60%);
+}
+
+/* Tema propio del Dashboard (y de las páginas de auth que comparten esta
+   hoja): antes no existía ningún tema claro aquí — esto es un concepto
+   aparte de los botones "Apariencia" del panel (que solo guardan el tema
+   *por defecto para visitantes* del sitio público en BD). Mismos valores
+   que public/assets/css/variables.css para que ambos se sientan
+   coherentes. Se activa/persiste vía el switch nuevo del Dashboard y el
+   script anti-flash de cada página (ver admin-theme.js). */
+[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-2: #f6f8fa;
+  --panel: #f6f8fa;
+  --panel-2: #eaeef2;
+  --border: #d0d7de;
+  --border-2: #d8dee4;
+  --text: #1f2328;
+  --soft: #636c76;
+  --green: #1a7f37;
+  --accent: #0969da;
+  --btn: #0969da;
+  --btn-text: #ffffff;
+
+  --auth-bg: radial-gradient(circle at 20% 20%, #ffffff 0%, #eaeef2 60%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Ver la misma regla en public/assets/css/base.css — anillo de foco
+   consistente solo para navegación por teclado (:focus-visible). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+html {
+  scrollbar-color: var(--border-2) var(--bg-2);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--bg-2);
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border-2);
+  border-radius: 999px;
+  border: 3px solid var(--bg-2);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--soft);
+}
+*::-webkit-scrollbar-corner {
+  background: var(--bg-2);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Misma clase/mecanismo que public/assets/css/base.css: al alternar tema
+   (dashboard o páginas de auth), el JS correspondiente (admin-sections.js,
+   auth-theme-toggle.js) pone esta clase en <html> durante --duration-theme
+   para que TODO lo que cambia de color por el tema (incluido el fondo con
+   degradado --auth-bg de las pantallas de auth, ver admin-login.css) se
+   anime a la misma velocidad y con la misma curva --ease-reveal, en vez de
+   que cada elemento use la duración corta que ya tuviera declarada para SU
+   PROPIA transición de hover/foco (--duration-fast) — sin este !important,
+   el botón de tema o los inputs fundían a su propio ritmo de hover mientras
+   el fondo de la pantalla (que no tenía transición propia) cambiaba de
+   golpe. Se anima "background" completo (no solo background-color) porque
+   un degradado se fija como background-image, no background-color. Se
+   quita sola al terminar para no frenar las transiciones normales de hover
+   el resto del tiempo. */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background var(--duration-theme) var(--ease-reveal), color var(--duration-theme) var(--ease-reveal), border-color var(--duration-theme) var(--ease-reveal), fill var(--duration-theme) var(--ease-reveal) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-transitioning,
+  .theme-transitioning * {
+    transition: none !important;
+  }
+}
+
+/* Mismo look que el switch de tema del portafolio público (.nav__icon-btn en
+   nav.css): tipografía mono, mismo tamaño de fuente/gap, ícono + etiqueta de
+   texto con el modo actual (antes este botón solo mostraba el ícono, sin
+   texto, y quedaba distinto al del sitio público). */
+.theme-toggle-btn {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.theme-toggle-icon {
+  display: inline-flex;
+}
+
+/* Validación de formularios propia (ver form-validate.js) en vez de los
+   globos nativos del navegador ("Rellena este campo", "Incluye un signo @"),
+   que no se pueden diseñar y varían entre navegadores. Mismo lenguaje visual
+   que el medidor de fortaleza de contraseña (admin-login.css): fundido +
+   deslizamiento al aparecer, respeta prefers-reduced-motion. Vive aquí (no en
+   admin-login.css) porque admin-base.css es la única hoja que cargan tanto el
+   dashboard como las 6 páginas de auth por igual. */
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--red);
+  animation: fieldHintIn var(--duration-base) ease;
+}
+@keyframes fieldHintIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+input[aria-invalid="true"], textarea[aria-invalid="true"] {
+  border-color: var(--red) !important;
+}
+
+/* Sacude el campo al intentar enviar el formulario con errores sin corregir
+   — mismo recurso que ya usa el dashboard para el proyecto insignia
+   duplicado (ver admin-forms.js/admin-forms.css), aquí generalizado para
+   cualquier campo de cualquier formulario de admin. */
+@keyframes fieldShake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.is-field-shaking {
+  animation: fieldShake 0.42s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .field-hint {
+    animation: none;
+  }
+  .is-field-shaking {
+    animation: none;
+  }
+}
+
+input, textarea, select, button {
+  font-family: var(--font-sans);
+}
+
+::placeholder {
+  color: #6e7681;
+}
+
+h1, h2, h3, p {
+  margin: 0;
+}
+
+.traffic-lights {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.traffic-lights span {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.traffic-lights span:nth-child(1) { background: #ff5f57; }
+.traffic-lights span:nth-child(2) { background: #febc2e; }
+.traffic-lights span:nth-child(3) { background: #28c840; }
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--green);
+  display: inline-block;
+}
+
+.icon {
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}

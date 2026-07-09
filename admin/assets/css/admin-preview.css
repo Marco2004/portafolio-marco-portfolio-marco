@@ -1,0 +1,27 @@
+/* La vista previa es un <iframe> que carga el sitio público real (mismo
+   CSS/HTML que ve cualquier visitante) — ver admin-preview.js. El resaltado
+   de correspondencia campo↔vista previa (admin-preview-highlight.js) se
+   inyecta como <style> dentro del propio documento del iframe, no aquí,
+   porque este archivo no puede alcanzar elementos dentro de otro documento.
+*/
+.preview-frame-wrap {
+  flex: 1;
+  min-height: 0;
+  margin: 0 -20px;
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+  background: var(--bg);
+}
+
+.preview-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.preview-column.is-expanded .preview-frame-wrap {
+  margin: 0 -32px;
+  border-top: none;
+}

@@ -1,0 +1,23 @@
+# Secretos y config local — nunca se suben al repo.
+.env
+
+# Volcados de la base de datos: incluyen password_hash y tokens reales de
+# admin_users, no deben terminar en un repo público (database/.htaccess ya
+# los bloquea por HTTP, esto los bloquea también para git).
+database/backups/*.sql
+
+# Logs de seguridad generados en tiempo de ejecución.
+src/logs/*.log
+
+# Archivos subidos por el admin desde el dashboard (contenido, no código).
+public/uploads/projects/*
+!public/uploads/projects/.gitkeep
+
+# Artefactos de editor/SO.
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Estado interno de Claude Code (sesiones/locks) — herramienta, no proyecto.
+.claude/

@@ -1,0 +1,63 @@
+# Sirve el sitio público (public/) en la raíz del dominio, sin tener que
+# escribir "/public" en la URL — para que en producción baste con
+# "https://midominio.com/" en vez de "https://midominio.com/public/". Es una
+# reescritura interna (el navegador nunca ve "/public"), no una redirección:
+# admin/, api/, src/, database/ e i18n/ mantienen sus rutas reales tal cual,
+# igual que "/public/..." directo (lo sigue usando admin/index.php para el
+# iframe de vista previa y el link "Ver sitio público").
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Raíz del sitio (con o sin "/" final) → sitio público, sin "/public" en
+    # la URL. Va antes que la regla de abajo porque la carpeta del proyecto
+    # en sí también es "una ruta real" (-d) y si no, nunca llegaría aquí.
+    RewriteRule ^$ public/index.php [L]
+
+    # Ya existe como archivo o carpeta real (admin/, api/, src/, database/,
+    # i18n/, public/, dotfiles...) — se sirve tal cual, sin reescribir nada.
+    # %{REQUEST_FILENAME} es la ruta absoluta ya resuelta por Apache, así que
+    # esto funciona igual si el proyecto vive en la raíz del dominio
+    # (producción) que si vive en una subcarpeta de htdocs (XAMPP local).
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Cualquier otra ruta que no exista arriba pero sí exista dentro de
+    # public/ (assets/css/*, assets/js/*, uploads/*, referenciadas con ruta
+    # relativa desde public/index.php) se sirve desde ahí. El (?!public/)
+    # evita reescribir dos veces una ruta que ya empieza con "public/" pero no
+    # existe (ej. una imagen subida y luego borrada) — sin él, esa ruta
+    # entraría en un bucle "public/public/public/..." hasta el límite de
+    # redirecciones internas de Apache (error 500).
+    RewriteRule ^(?!public/)(.+)$ public/$1 [L]
+</IfModule>
+
+# Bloquea el acceso HTTP directo a cualquier "dotfile" en la raíz del sitio
+# (.env, .gitignore, .git/, etc.) — .env vive aquí porque config.php lo lee
+# con una ruta relativa simple, pero NUNCA debe poder descargarse por HTTP:
+# contiene las credenciales reales de SMTP/BD (ver src/config.php).
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+    # 'unsafe-inline' en style/script porque el sitio usa style="" inline y
+    # bloques <script> extensamente (ver README de arquitectura) — quitarlo
+    # del todo requeriría mover todos los estilos inline a clases CSS.
+    # frame-ancestors 'self' (antes 'none'): el dashboard embebe el sitio
+    # público real dentro de un <iframe> para la vista previa en vivo (ver
+    # admin/assets/js/admin-preview.js) — sigue bloqueando que cualquier
+    # sitio de terceros lo enmarque (clickjacking), solo permite que el
+    # propio dominio se enmarque a sí mismo.
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; frame-ancestors 'self'"
+</IfModule>

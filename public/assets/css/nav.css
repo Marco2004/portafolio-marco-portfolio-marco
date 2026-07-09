@@ -1,0 +1,110 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav__inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 28px;
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--btn);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.nav__brand-text {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.nav__link {
+  text-decoration: none;
+  color: var(--soft);
+  font-size: 14px;
+  padding: 8px 13px;
+  border-radius: 7px;
+  transition: color var(--duration-fast) ease, background-color var(--duration-fast) ease;
+}
+.nav__link:hover {
+  color: var(--text);
+  background: var(--panel);
+}
+
+.nav__link.is-active {
+  color: var(--accent);
+}
+
+.nav__icon-btn {
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-2);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color var(--duration-fast) ease;
+}
+.nav__icon-btn:hover {
+  background: var(--panel-2);
+}
+
+.nav__cv-btn {
+  margin-left: 4px;
+  height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+/* El switch de tema del nav usa el mismo sol/luna que el del dashboard (ver
+   public/assets/js/icons.js y theme.js). El fundido al alternar ícono y
+   etiqueta ya no es una animación CSS por clase — theme.js lo hace con
+   opacity inline, mismo mecanismo y duración que el cambio de idioma
+   (i18n.js), para que ambos se sientan parte del mismo lenguaje visual. */
+.theme-toggle-icon {
+  display: inline-flex;
+}
