@@ -16,25 +16,6 @@ function site_url(string $path): string {
 }
 
 /**
- * Script anti-flash para el <head> del Dashboard y las páginas de auth
- * (login/setup/forgot-password/reset-password/verify/verify-email). Se
- * resuelve antes de pintar nada: elección manual guardada de forma
- * permanente en el navegador (localStorage, botón de tema del dashboard o
- * del sitio público — misma clave "mpv_theme" para ambos) > preferencia del
- * sistema operativo > oscuro (si el navegador no expone
- * prefers-color-scheme). Solo se usa el sistema operativo como default la
- * primera vez, antes de que exista una elección manual guardada; no hay
- * default de base de datos — el tema nunca es algo configurado por el admin
- * para otros visitantes (eso no existe, ver el punto de la pestaña
- * Apariencia eliminada). Se imprime igual en las 7 páginas en vez de un
- * <script src> aparte porque debe ejecutarse en línea, antes de que se pinte
- * cualquier CSS.
- */
-function theme_antiflash_script(): string {
-    return '<script>(function(){try{var m=localStorage.getItem("mpv_theme");if(m==="dark"||m==="light"){document.documentElement.setAttribute("data-theme",m);}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");}}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>';
-}
-
-/**
  * Nombres de mes en español/inglés para las fechas de Experiencia,
  * Certificaciones y Educación (punto 6) — el admin ya no escribe el texto
  * a mostrar a mano, se genera siempre a partir de la fecha real capturada
@@ -108,6 +89,9 @@ function format_date_range(?string $start, ?string $end, string $lang = 'es'): s
 function json_response($data, int $status = 200): void {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
+    // Respuestas de la API del dashboard (autenticadas) o errores puntuales —
+    // ningún intermediario (proxy, caché del navegador) debe guardarlas.
+    header('Cache-Control: no-store');
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -393,6 +377,16 @@ function validate_image_upload(array $file): array {
     $mime = mime_content_type($file['tmp_name']);
     if (!isset($allowed[$mime])) {
         return ['ok' => false, 'error' => 'Formato no permitido. Usa PNG, JPG o WEBP', 'ext' => null];
+    }
+    // Refuerzo sobre mime_content_type(): confirma que el archivo es una
+    // imagen real que una librería de imágenes puede decodificar (dimensiones
+    // válidas), no solo que sus primeros bytes coincidan con la firma
+    // esperada — algunos archivos maliciosos (ej. un PHP con una cabecera
+    // GIF/PNG pegada al inicio) pasan la revisión de MIME pero fallan aquí.
+    // La carpeta de destino ya bloquea la ejecución de .php (ver
+    // public/uploads/.htaccess), así que esto es una capa extra, no la única.
+    if (@getimagesize($file['tmp_name']) === false) {
+        return ['ok' => false, 'error' => 'El archivo no es una imagen válida', 'ext' => null];
     }
     return ['ok' => true, 'error' => null, 'ext' => $allowed[$mime]];
 }

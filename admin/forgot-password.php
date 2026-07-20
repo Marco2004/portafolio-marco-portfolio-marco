@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<?= theme_antiflash_script() ?>
+<script src="<?= asset_url('assets/js/theme-antiflash.js') ?>"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Recuperar contraseña — Panel de administración</title>
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </div>
       <?php if ($sent): ?>
-        <p class="login-hint" style="color:var(--green);">Te enviamos instrucciones por correo. Revisa tu bandeja de entrada (y spam).</p>
+        <p class="login-hint login-hint--success">Te enviamos instrucciones por correo. Revisa tu bandeja de entrada (y spam).</p>
         <p class="login-hint"><a href="login.php">Volver al login</a></p>
       <?php else: ?>
         <form class="login-form" method="post">

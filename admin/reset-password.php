@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<?= theme_antiflash_script() ?>
+<script src="<?= asset_url('assets/js/theme-antiflash.js') ?>"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Restablecer contraseña — Panel de administración</title>
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <?php if ($done): ?>
-        <p class="login-hint" style="color:var(--green);">Contraseña actualizada. Ya puedes iniciar sesión — por seguridad, cerramos todos los dispositivos recordados.</p>
+        <p class="login-hint login-hint--success">Contraseña actualizada. Ya puedes iniciar sesión — por seguridad, cerramos todos los dispositivos recordados.</p>
         <p class="login-hint"><a href="login.php">Ir al login</a></p>
       <?php elseif (!$tokenRow): ?>
         <p class="login-error" role="alert">Este enlace venció o ya se usó.</p>

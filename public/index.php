@@ -71,28 +71,7 @@ foreach ($socialLinks as $link) {
 <html lang="<?= e($lang) ?>" data-theme="<?= e($theme) ?>">
 <head>
 <?php if (!$isPreview): ?>
-<script>
-(function () {
-  // Se resuelve el tema ANTES de pintar nada, para no parpadear entre el
-  // tema base del servidor y el real. Prioridad: anulación manual guardada
-  // de forma permanente en el navegador (localStorage, botón del nav) >
-  // preferencia del sistema (prefers-color-scheme) > tema base que ya trae
-  // el <html> desde el servidor. No existe un tercer modo "automático"
-  // guardado.
-  try {
-    var mode = localStorage.getItem('mpv_theme');
-    if (mode === 'dark' || mode === 'light') {
-      document.documentElement.setAttribute('data-theme', mode);
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-    // Si ninguna media query resuelve (navegador viejo sin soporte) se
-    // queda el data-theme por defecto que ya trae el <html> del servidor.
-  } catch (e) {}
-})();
-</script>
+<script src="<?= asset_url('assets/js/theme-antiflash.js') ?>"></script>
 <?php endif; ?>
 <!-- En vista previa (?preview=1) el tema ya viene forzado por query string
      desde admin/index.php (ver $theme arriba) — el script de arriba se
@@ -121,7 +100,7 @@ foreach ($socialLinks as $link) {
 <link rel="stylesheet" href="<?= asset_url('assets/css/cv-overlay.css') ?>">
 <link rel="stylesheet" href="<?= asset_url('assets/css/animations.css') ?>">
 <link rel="stylesheet" href="<?= asset_url('assets/css/responsive.css') ?>">
-<script>document.documentElement.classList.add('has-js');</script>
+<script src="<?= asset_url('assets/js/mark-js-enabled.js') ?>"></script>
 </head>
 <body>
 
@@ -144,7 +123,7 @@ foreach ($socialLinks as $link) {
         <a href="#formacion" class="nav__link" data-i18n="nav.education"><?= e($i18n[$lang]['nav.education']) ?></a>
         <a href="#contacto" class="nav__link" data-i18n="nav.contact"><?= e($i18n[$lang]['nav.contact']) ?></a>
         <button type="button" class="nav__icon-btn" data-lang-toggle title="Español / English" aria-label="Cambiar idioma">
-          <span style="opacity:.6">◍</span><span data-lang-label><?= $lang === 'en' ? 'ES' : 'EN' ?></span>
+          <span class="lang-toggle-dot">◍</span><span data-lang-label><?= $lang === 'en' ? 'ES' : 'EN' ?></span>
         </button>
         <button type="button" class="nav__icon-btn" data-theme-toggle title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">
           <span class="theme-toggle-icon" data-theme-icon></span><span data-theme-label><?= $theme === 'dark' ? e($i18n[$lang]['theme.dark']) : e($i18n[$lang]['theme.light']) ?></span>
@@ -295,7 +274,7 @@ foreach ($socialLinks as $link) {
             <span class="project-card__domain"><?= e(project_domain($p['title'])) ?></span>
           </div>
           <?php if ($p['image']): ?>
-            <img class="project-card__image" src="uploads/projects/<?= e($p['image']) ?>" alt="<?= e($p['title']) ?>">
+            <img class="project-card__image" src="uploads/projects/<?= e($p['image']) ?>" alt="<?= e($p['title']) ?>" loading="lazy" decoding="async">
           <?php else: ?>
             <div class="project-card__image image-drop"><div class="image-drop__placeholder">Sin captura todavía</div></div>
           <?php endif; ?>
@@ -327,7 +306,7 @@ foreach ($socialLinks as $link) {
     </div>
 
     <?php if ($githubLink): ?>
-    <div style="margin-top:28px;">
+    <div class="projects-see-all">
       <a href="<?= e($githubLink) ?>" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="p.all"><?= e($i18n[$lang]['p.all']) ?></a>
     </div>
     <?php endif; ?>
@@ -361,7 +340,7 @@ foreach ($socialLinks as $link) {
   <section id="experiencia" class="section">
     <div data-reveal>
       <p class="section-kicker" data-i18n="e.kick"><?= e($i18n[$lang]['e.kick']) ?></p>
-      <h2 class="section-title" style="margin-bottom:32px;" data-i18n="e.title"><?= e($i18n[$lang]['e.title']) ?></h2>
+      <h2 class="section-title section-title--spaced-lg" data-i18n="e.title"><?= e($i18n[$lang]['e.title']) ?></h2>
     </div>
     <div class="timeline">
       <?php foreach ($data['experience'] as $x):
@@ -396,7 +375,7 @@ foreach ($socialLinks as $link) {
     <div class="edu-cert-grid">
       <div data-reveal>
         <p class="section-kicker" data-i18n="ed.kick"><?= e($i18n[$lang]['ed.kick']) ?></p>
-        <h2 class="section-title" style="margin-bottom:24px;" data-i18n="ed.title"><?= e($i18n[$lang]['ed.title']) ?></h2>
+        <h2 class="section-title section-title--spaced" data-i18n="ed.title"><?= e($i18n[$lang]['ed.title']) ?></h2>
         <div class="edu-list">
           <?php foreach ($educationEntries as $edu): ?>
             <div class="edu-block">
@@ -428,7 +407,7 @@ foreach ($socialLinks as $link) {
       </div>
       <div data-reveal>
         <p class="section-kicker" data-i18n="c.kick"><?= e($i18n[$lang]['c.kick']) ?></p>
-        <h2 class="section-title" style="margin-bottom:24px;" data-i18n="c.title"><?= e($i18n[$lang]['c.title']) ?></h2>
+        <h2 class="section-title section-title--spaced" data-i18n="c.title"><?= e($i18n[$lang]['c.title']) ?></h2>
         <div class="cert-list">
           <?php foreach ($data['certifications'] as $c):
             // La fecha ya no se escribe a mano dentro de "issuer" — se
@@ -450,7 +429,7 @@ foreach ($socialLinks as $link) {
   </section>
 
   <!-- CONTACTO -->
-  <section id="contacto" class="section" style="padding-bottom:72px;">
+  <section id="contacto" class="section section--contact">
     <div data-reveal>
       <p class="section-kicker" data-i18n="co.kick"><?= e($i18n[$lang]['co.kick']) ?></p>
       <h2 class="contact-title" data-i18n="co.title"><?= e($i18n[$lang]['co.title']) ?></h2>
@@ -502,7 +481,7 @@ foreach ($socialLinks as $link) {
     <span class="cv-overlay__bar-title" id="cv-overlay-title" data-i18n="cv.hdr"><?= e($i18n[$lang]['cv.hdr']) ?></span>
     <div class="cv-overlay__bar-actions">
       <button type="button" class="cv-overlay__lang-btn" data-lang-toggle title="Español / English" aria-label="Cambiar idioma">
-        <span style="opacity:.6">◍</span><span data-lang-label><?= $lang === 'en' ? 'ES' : 'EN' ?></span>
+        <span class="lang-toggle-dot">◍</span><span data-lang-label><?= $lang === 'en' ? 'ES' : 'EN' ?></span>
       </button>
       <button type="button" class="cv-overlay__download" data-cv-print data-i18n="cv.print"><?= e($i18n[$lang]['cv.print']) ?></button>
       <button type="button" class="cv-overlay__close" data-cv-close data-i18n="cv.close"><?= e($i18n[$lang]['cv.close']) ?></button>

@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !verify_csrf_field($_POST['csrf_tok
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<?= theme_antiflash_script() ?>
+<script src="<?= asset_url('assets/js/theme-antiflash.js') ?>"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Iniciar sesión — Panel de administración</title>
@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !verify_csrf_field($_POST['csrf_tok
           </div>
         </div>
         <?php if ($justVerified): ?>
-          <p class="login-hint" style="color:var(--green);">Correo verificado. Ya puedes iniciar sesión.</p>
+          <p class="login-hint login-hint--success">Correo verificado. Ya puedes iniciar sesión.</p>
         <?php endif; ?>
         <?php if ($error): ?>
           <p class="login-error" role="alert"><?= e($error) ?></p>

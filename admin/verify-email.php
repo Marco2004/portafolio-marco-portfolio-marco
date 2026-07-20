@@ -87,7 +87,7 @@ $pendingAdmin = pending_unverified_admin($pdo);
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<?= theme_antiflash_script() ?>
+<script src="<?= asset_url('assets/js/theme-antiflash.js') ?>"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Verifica tu correo — Panel de administración</title>
@@ -117,25 +117,25 @@ $pendingAdmin = pending_unverified_admin($pdo);
         </div>
       </div>
 
-      <p class="login-hint" style="margin-bottom:14px;">
+      <p class="login-hint u-mb-14">
         Antes de iniciar sesión necesitas confirmar tu correo electrónico. Da clic en el enlace que te enviamos — vence en <?= EMAIL_VERIFY_TTL_MINUTES ?> minutos.
       </p>
 
       <?php if ($notice): ?>
-        <p class="login-hint" style="color:var(--accent);"><?= e($notice) ?></p>
+        <p class="login-hint login-hint--accent"><?= e($notice) ?></p>
       <?php endif; ?>
       <?php if ($error): ?>
         <p class="login-error" role="alert"><?= e($error) ?></p>
       <?php endif; ?>
 
       <?php if ($pendingAdmin): ?>
-        <form method="post" style="margin-top:6px;">
+        <form method="post" class="u-mt-6">
           <input type="hidden" name="action" value="resend">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_field_token()) ?>">
           <button type="submit" class="login-link-btn">Reenviar enlace de verificación</button>
         </form>
       <?php endif; ?>
-      <p class="login-hint" style="margin-top:10px;"><a href="login.php">Volver al login</a></p>
+      <p class="login-hint u-mt-10"><a href="login.php">Volver al login</a></p>
     </div>
   </div>
 </div>

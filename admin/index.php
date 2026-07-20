@@ -21,7 +21,7 @@ $adminI18n = [
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<?= theme_antiflash_script() ?>
+<script src="<?= asset_url('assets/js/theme-antiflash.js') ?>"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title data-i18n="admin.pageTitle">Panel de administración — Portafolio Web</title>
@@ -189,7 +189,7 @@ $adminI18n = [
             <p class="card__title" data-i18n="admin.cv.cardTitle">CV</p>
             <div class="cv-current">
               <span class="cv-current__icon"><?= icon('file-text') ?></span>
-              <div style="flex:1; min-width:0;">
+              <div class="cv-current__body">
                 <p class="cv-current__name" data-i18n="admin.cv.name">Formato único, generado en automático</p>
                 <p class="cv-current__hint" data-i18n="admin.cv.hint">No se sube ningún archivo aquí — el CV siempre se genera con este mismo formato (perfil, experiencia, educación, habilidades, certificaciones e idiomas), tomando siempre los últimos cambios que guardes en las demás pestañas.</p>
               </div>
@@ -217,17 +217,7 @@ $adminI18n = [
         </div>
         <div class="preview-frame-wrap">
           <iframe class="preview-frame" data-preview-frame title="Vista previa del sitio público" loading="eager"></iframe>
-          <script>
-            // El src se arma en línea (no en el atributo) para poder leer el
-            // data-theme que el script anti-flash del <head> ya resolvió en
-            // <html> (sessionStorage/sistema) y así la vista previa nazca ya
-            // con el tema correcto, sin un segundo "reload" del iframe.
-            (function () {
-              var f = document.currentScript.previousElementSibling;
-              var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-              f.src = '../public/index.php?preview=1&theme=' + t;
-            })();
-          </script>
+          <script src="<?= asset_url('assets/js/admin-preview-init.js') ?>"></script>
         </div>
       </aside>
     </div>

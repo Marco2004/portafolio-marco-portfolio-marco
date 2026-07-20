@@ -1,3 +1,14 @@
+# Evita que Apache liste el contenido de una carpeta que no tiene index.php
+# (ej. pedir "/public/uploads/projects/" directo, sin nombre de archivo,
+# mostraría cada imagen subida en vez de un error). Ya se confirmó por curl
+# que el hosting de producción no lista directorios por su cuenta, así que
+# esto es una segunda capa, no la única.
+# OJO — SI ESTA LÍNEA ROMPE PRODUCCIÓN (Error 500 en todo el sitio): algunos
+# hostings compartidos no permiten cambiar "Options" desde .htaccess. Basta
+# con borrar la línea "Options -Indexes" de abajo (nada más) — el resto del
+# archivo sigue funcionando exactamente igual sin ella.
+Options -Indexes
+
 # Sirve el sitio público (public/) en la raíz del dominio, sin tener que
 # escribir "/public" en la URL — para que en producción baste con
 # "https://midominio.com/" en vez de "https://midominio.com/public/". Es una
@@ -51,13 +62,49 @@
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
-    # 'unsafe-inline' en style/script porque el sitio usa style="" inline y
-    # bloques <script> extensamente (ver README de arquitectura) — quitarlo
-    # del todo requeriría mover todos los estilos inline a clases CSS.
+    # Fuerza HTTPS en el navegador durante 1 año (incluidos subdominios) para
+    # cualquier visita futura, incluso si alguien escribe "http://" a mano o
+    # sigue un link viejo — sin esto, esa primera petición viaja en claro
+    # antes de que el 301 a HTTPS (ya configurado más abajo) pueda actuar.
+    # Seguro de activar: el sitio ya fuerza HTTPS en producción.
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    # Aísla la pestaña de este sitio de otras que la hayan abierto con
+    # window.open() (protección adicional contra ataques tipo
+    # "reverse tabnabbing"/Spectre entre pestañas de distintos orígenes) — no
+    # afecta la navegación normal ni los links con target="_blank" (que ya
+    # usan rel="noopener" en todo el sitio).
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    # Este sitio no publica ningún crossdomain.xml/clientaccesspolicy.xml para
+    # Flash/Silverlight (tecnologías obsoletas) — lo declara explícito en vez
+    # de dejarlo ambiguo.
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+    # Ya no hay 'unsafe-inline' en script-src: todo el JS que vivía inline en
+    # <script> se movió a archivos .js estáticos (ver
+    # admin/assets/js/theme-antiflash.js, admin/assets/js/admin-preview-init.js,
+    # public/assets/js/theme-antiflash.js, public/assets/js/mark-js-enabled.js),
+    # verificado con Playwright (0 violaciones de script-src en sitio público,
+    # login y setup) — un <script> inyectado por una vulnerabilidad futura (que
+    # hoy no existe: toda salida ya pasa por e()/escapeHtml()) ya no se
+    # ejecutaría.
+    #
+    # style-src SÍ conserva 'unsafe-inline' a propósito: aunque los style=""
+    # estáticos del HTML ya se movieron a clases CSS, muchos scripts (fades de
+    # tema/idioma, apertura del CV, el diálogo de confirmación con partículas,
+    # arrastrar para reordenar, la vista previa de imagen recién subida)
+    # calculan valores en tiempo real (posiciones, colores de transición, la
+    # URL de la imagen que el admin acaba de subir) y los aplican con
+    # elemento.style.propiedad = valor — para la CSP eso cuenta exactamente
+    # igual que un style="" en el HTML. Se probó quitando 'unsafe-inline' de
+    # style-src también: rompió esas animaciones (cientos de violaciones reales
+    # con Playwright). Convertir esos valores dinámicos a clases fijas no es
+    # posible sin reescribir esa lógica (una URL de imagen subida, por
+    # ejemplo, no se puede declarar de antemano como clase CSS) — se deja
+    # fuera para no arriesgar la funcionalidad/animaciones actuales.
+    #
     # frame-ancestors 'self' (antes 'none'): el dashboard embebe el sitio
     # público real dentro de un <iframe> para la vista previa en vivo (ver
     # admin/assets/js/admin-preview.js) — sigue bloqueando que cualquier
     # sitio de terceros lo enmarque (clickjacking), solo permite que el
     # propio dominio se enmarque a sí mismo.
-    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; frame-ancestors 'self'"
+    Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self'; frame-ancestors 'self'"
 </IfModule>

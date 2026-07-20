@@ -367,6 +367,29 @@
 .login-hint a:hover {
   text-decoration: underline;
 }
+/* Variantes de color para avisos puntuales (éxito/atención) dentro de
+   .login-hint — antes vivían como style="color:..." inline en cada página;
+   se movieron aquí para poder quitar 'unsafe-inline' de la CSP. */
+.login-hint--success {
+  color: var(--green);
+}
+.login-hint--accent {
+  color: var(--accent);
+}
+/* Ajustes puntuales de espacio vertical (formularios de reenvío y avisos de
+   verify.php/verify-email.php) — antes vivían como style="margin-top:..."/
+   style="margin-bottom:..." inline. Van después de .login-hint en este mismo
+   archivo (no en admin-base.css, que carga antes) para que sí ganen sobre su
+   "margin: 2px 0 0" cuando se combinan con esa clase. */
+.u-mt-6 {
+  margin-top: 6px;
+}
+.u-mt-10 {
+  margin-top: 10px;
+}
+.u-mb-14 {
+  margin-bottom: 14px;
+}
 
 .checkbox-field {
   display: flex;

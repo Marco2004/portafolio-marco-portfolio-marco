@@ -607,6 +607,13 @@
   width: 26px;
   height: 26px;
 }
+/* Antes style="flex:1; min-width:0;" inline — min-width:0 es necesario para
+   que este hijo flex no se resista a encogerse por el ancho intrínseco de su
+   texto (si no, el nombre/hint largo empuja el layout en vez de truncar). */
+.cv-current__body {
+  flex: 1;
+  min-width: 0;
+}
 .cv-current__name {
   margin: 0;
   font-size: 14px;

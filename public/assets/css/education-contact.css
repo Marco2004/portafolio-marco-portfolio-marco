@@ -102,6 +102,12 @@
   text-align: right;
 }
 
+/* Espacio extra debajo de Contacto (última sección antes del footer) — antes
+   style="padding-bottom:72px;" inline sobre .section (56px por defecto). */
+.section--contact {
+  padding-bottom: 72px;
+}
+
 .contact-title {
   font-size: clamp(28px, 4.5vw, 46px);
   font-weight: 700;

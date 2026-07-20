@@ -260,3 +260,9 @@
   color: var(--soft);
   background: var(--bg-2);
 }
+
+/* Envoltorio del link "Ver todos mis proyectos en GitHub" — antes
+   style="margin-top:28px;" inline. */
+.projects-see-all {
+  margin-top: 28px;
+}

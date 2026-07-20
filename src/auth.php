@@ -124,10 +124,7 @@ function require_login_page(string $loginUrl): void {
 
 function require_login_api(): void {
     if (!is_logged_in()) {
-        http_response_code(401);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['error' => 'No autenticado']);
-        exit;
+        json_response(['error' => 'No autenticado'], 401);
     }
 }
 

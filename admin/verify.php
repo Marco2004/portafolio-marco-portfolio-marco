@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !verify_csrf_field($_POST['csrf_tok
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<?= theme_antiflash_script() ?>
+<script src="<?= asset_url('assets/js/theme-antiflash.js') ?>"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Verificar código — Panel de administración</title>
@@ -116,14 +116,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !verify_csrf_field($_POST['csrf_tok
           Recordar este dispositivo por 30 días
         </label>
         <?php if ($notice): ?>
-          <p class="login-hint" style="color:var(--accent);"><?= e($notice) ?></p>
+          <p class="login-hint login-hint--accent"><?= e($notice) ?></p>
         <?php endif; ?>
         <?php if ($error): ?>
           <p class="login-error" role="alert"><?= e($error) ?></p>
         <?php endif; ?>
         <button type="submit" class="login-submit">Verificar</button>
       </form>
-      <form method="post" style="margin-top:10px;">
+      <form method="post" class="u-mt-10">
         <input type="hidden" name="action" value="resend">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_field_token()) ?>">
         <button type="submit" class="login-link-btn">Reenviar código</button>

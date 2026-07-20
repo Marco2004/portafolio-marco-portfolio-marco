@@ -93,6 +93,13 @@
   background: var(--panel-2);
 }
 
+/* Punto decorativo antes de la etiqueta ES/EN del botón de idioma — antes
+   style="opacity:.6" inline. Compartida con .cv-overlay__lang-btn (mismo
+   botón, dentro del overlay de CV), que carga este mismo archivo. */
+.lang-toggle-dot {
+  opacity: .6;
+}
+
 .nav__cv-btn {
   margin-left: 4px;
   height: 36px;

@@ -123,6 +123,16 @@ a {
   letter-spacing: -0.02em;
   margin: 0 0 8px;
 }
+/* Compensan la falta de un <p class="section-intro"> debajo (que en las
+   demás secciones aporta 36px de espacio) en las secciones que no llevan
+   texto introductorio — antes vivían como style="margin-bottom:..." inline
+   en cada <h2> afectado (Experiencia, Formación, Certificaciones). */
+.section-title--spaced-lg {
+  margin-bottom: 32px;
+}
+.section-title--spaced {
+  margin-bottom: 24px;
+}
 
 .section-intro {
   color: var(--soft);
