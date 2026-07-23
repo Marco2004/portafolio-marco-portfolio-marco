@@ -62,10 +62,15 @@
   // #confirm debe ser igual a #password (setup.php, reset-password.php) —
   // no es parte de la Constraint Validation API nativa, se revisa a mano
   // con el mismo criterio que el servidor (ver setup.php/reset-password.php).
+  // Se compara con trim() en ambos lados: el servidor recorta la contraseña
+  // antes de guardarla/verificarla (ver el mismo trim() en setup.php/
+  // reset-password.php), así que un espacio accidental al inicio/final en
+  // uno de los dos campos no debe mostrarse aquí como "no coinciden" cuando
+  // el servidor sí las aceptaría como iguales.
   function checkConfirmMatch(input) {
     if (input.id !== 'confirm' || !input.form) return true;
     var pw = input.form.querySelector('#password');
-    if (pw && input.value && pw.value !== input.value) {
+    if (pw && input.value.trim() && pw.value.trim() !== input.value.trim()) {
       showError(input, 'Las contraseñas no coinciden.');
       return false;
     }
@@ -113,6 +118,16 @@
 
     fields.forEach(function (input) {
       input.addEventListener('blur', function () {
+        // Recorta espacios visibles al inicio/final en campos de texto/correo
+        // (usuario, correo, identificador) al salir del campo — así lo que se
+        // ve coincide con lo que el servidor va a guardar/comparar (que ya
+        // aplica trim(), ver login.php/setup.php/forgot-password.php). Los
+        // campos de contraseña NO se tocan aquí: se dejan tal cual se
+        // escribieron, el trim() de la contraseña ocurre solo en servidor.
+        if (input.type === 'text' || input.type === 'email') {
+          var trimmed = input.value.trim();
+          if (trimmed !== input.value) input.value = trimmed;
+        }
         if (!submitted && input.value.trim() === '') return;
         validateField(input);
       });

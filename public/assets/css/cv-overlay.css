@@ -59,6 +59,11 @@
   font-size: 13px;
   font-weight: 600;
   font-family: var(--font-mono);
+  transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease;
+}
+.cv-overlay__lang-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .cv-overlay__download {
@@ -75,6 +80,10 @@
   font-weight: 600;
   font-size: 14px;
   font-family: var(--font-sans);
+  transition: filter var(--duration-fast) ease;
+}
+.cv-overlay__download:hover {
+  filter: brightness(1.1);
 }
 
 .cv-overlay__close {
@@ -89,6 +98,11 @@
   cursor: pointer;
   font-size: 14px;
   font-family: var(--font-sans);
+  transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease;
+}
+.cv-overlay__close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .cv-page {

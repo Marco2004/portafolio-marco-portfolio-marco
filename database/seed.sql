@@ -4,6 +4,10 @@
 -- desde el dashboard (incluida la versión en inglés, con el toggle
 -- "Editando: Español / English" del topbar) — este archivo solo siembra la
 -- base de datos la primera vez.
+--
+-- OJO al desplegar en hosting compartido: si la base de datos ya existe con
+-- otro nombre, comentá o quitá la línea "USE portafolio;" de abajo antes de
+-- importar. En XAMPP local no hace falta tocar nada.
 USE portafolio;
 
 INSERT INTO hero (id, avail, avail_en, name, role, role_en, description, description_en) VALUES

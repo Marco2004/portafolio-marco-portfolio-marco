@@ -78,6 +78,24 @@ const ADMIN_GATE_COOKIE = 'mpv_admin_gate';
  * reset-password.php/verify-email.php: esas páginas ya llegan con su propio
  * token de un solo uso mandado por correo, que cumple el mismo papel.
  */
+/**
+ * Ruta del cookie de la reja: se calcula a partir del propio request en vez
+ * de un "/admin/" fijo — un "/admin/" fijo da por sentado que el proyecto
+ * vive en la raíz del dominio. En XAMPP local (o cualquier hosting que sirva
+ * el proyecto desde una subcarpeta, ej. "/portafolio-marco/admin/...") ese
+ * valor fijo nunca coincide con la ruta real, así que el navegador jamás
+ * reenvía el cookie — quedaba enmascarado mientras $_SESSION['admin_gate_ok']
+ * siguiera viva, pero en cuanto la sesión se destruye (logout real, por
+ * ejemplo) la reja vuelve a pedir la clave por URL cada vez, sin que el
+ * cookie de un año sirva de nada. Mismo criterio que ya usan
+ * forgot-password.php/setup.php/verify-email.php para construir enlaces
+ * absolutos (dirname() sobre la URL actual, sin el query string).
+ */
+function admin_gate_cookie_path(): string {
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+    return rtrim(dirname($path), '/') . '/';
+}
+
 function require_admin_gate(): void {
     if (ADMIN_ACCESS_KEY === '') {
         return;
@@ -94,12 +112,23 @@ function require_admin_gate(): void {
         $_SESSION['admin_gate_ok'] = true;
         setcookie(ADMIN_GATE_COOKIE, hash('sha256', ADMIN_ACCESS_KEY), [
             'expires' => time() + 60 * 60 * 24 * 365,
-            'path' => '/admin/',
+            'path' => admin_gate_cookie_path(),
             'httponly' => true,
             'samesite' => 'Lax',
             'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
         ]);
-        return;
+        // Redirige a la misma página sin "?key=..." apenas se guarda la
+        // cookie — ya cumplió su propósito (quedó en el log del servidor de
+        // todos modos, eso no se puede evitar) pero no hace falta que además
+        // se quede en la URL visible del navegador ni que viaje en el header
+        // Referer de los recursos que carga esa misma página (fuentes,
+        // imágenes de terceros, etc.). Se conserva cualquier otro parámetro
+        // ("?verified=1", etc.) — solo se quita "key".
+        $remaining = $_GET;
+        unset($remaining['key']);
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+        header('Location: ' . $path . ($remaining ? ('?' . http_build_query($remaining)) : ''));
+        exit;
     }
 
     if (!empty($_SESSION['admin_gate_ok'])) {

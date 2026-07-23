@@ -137,6 +137,9 @@
 .availability-badge__text {
   min-width: 0;
   overflow-wrap: break-word;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .availability-badge__dot {
@@ -146,12 +149,6 @@
   background: var(--green);
   display: inline-block;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 22%, transparent);
-}
-
-.availability-badge__text {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
 }
 
 .contact-card {
@@ -197,10 +194,17 @@
   border: 1px solid var(--border);
   background: var(--panel);
   text-decoration: none;
-  transition: border-color var(--duration-fast) ease;
+  transition: border-color var(--duration-fast) ease, transform var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
 }
+/* Misma "familia visual" que .project-card/.flagship (ver projects.css) —
+   lift + sombra al pasar el mouse, y un pequeño "clic" al presionar. */
 .contact-link:hover {
   border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
+}
+.contact-link:active {
+  transform: translateY(-2px) scale(.98);
 }
 
 .contact-link__label {
@@ -223,7 +227,4 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 28px;
-}
-.contact-cta .btn-primary:hover {
-  transform: translateY(-1px);
 }

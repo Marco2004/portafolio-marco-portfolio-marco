@@ -52,8 +52,23 @@
 }
 
 .level-pill--amber {
-  color: var(--var);
-  border: 1px solid color-mix(in srgb, var(--var) 35%, transparent);
+  color: var(--amber);
+  border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+}
+
+.level-pill--accent {
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.level-pill--purple {
+  color: var(--purple);
+  border: 1px solid color-mix(in srgb, var(--purple) 35%, transparent);
+}
+
+.level-pill--teal {
+  color: var(--teal);
+  border: 1px solid color-mix(in srgb, var(--teal) 35%, transparent);
 }
 
 .level-pill--neutral {

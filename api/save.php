@@ -6,10 +6,25 @@ require_login_api();
 require_csrf();
 
 $pdo = get_pdo();
+
+// Límite generoso (muy por encima de cualquier uso real del dashboard) para
+// que una sesión comprometida no pueda usarse para golpear la base de datos
+// sin freno — mismo mecanismo que ya protege login/reset/verify, ver
+// rate_limit_hit() en src/auth.php.
+$ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+if (rate_limit_hit($pdo, 'api_save', $ip, 60, 5 * 60)) {
+    json_response(['error' => 'Demasiadas solicitudes seguidas. Espera unos minutos e intenta de nuevo.'], 429);
+}
+
 $data = json_input();
 
 if (empty($data['hero']) || !isset($data['projects'])) {
     json_response(['error' => 'Datos incompletos'], 422);
+}
+
+$limitError = validate_save_payload_limits($data);
+if ($limitError !== null) {
+    json_response(['error' => $limitError], 422);
 }
 
 try {

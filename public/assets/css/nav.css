@@ -39,6 +39,15 @@
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 15px;
+  transition: transform var(--duration-fast) ease;
+}
+/* Único elemento del nav sin ninguna reacción al pasar el mouse hasta ahora,
+   pese a ser un link real (vuelve a #top) — mismo lenguaje que el resto de
+   controles del nav (nav__link/nav__icon-btn ya cambian de color/fondo),
+   solo que aquí el logo "M" se agranda un poco en vez de teñirse, porque es
+   la marca, no una etiqueta de texto. */
+.nav__brand:hover .nav__logo {
+  transform: scale(1.08);
 }
 
 .nav__brand-text {
@@ -70,6 +79,25 @@
 
 .nav__link.is-active {
   color: var(--accent);
+}
+
+/* Botón hamburguesa: oculto por defecto (escritorio/tablet, donde
+   .nav__links ya cabe en una sola fila) — solo se muestra por debajo de
+   760px, ver responsive.css. */
+.nav__menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--border-2);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+.nav__menu-toggle:hover {
+  background: var(--panel-2);
 }
 
 .nav__icon-btn {

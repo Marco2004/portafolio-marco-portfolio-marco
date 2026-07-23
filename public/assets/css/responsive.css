@@ -22,6 +22,84 @@
   .hero__code-pre {
     font-size: 12px;
   }
+
+  /* 3 columnas fijas (hero.css) ya no caben con comodidad debajo de 760px —
+     Ficha rápida puede tener cualquier cantidad de datos (punto 3), así que
+     esto evita que una etiqueta o valor largo fuerce la fila más ancha que
+     la pantalla. */
+  .hero__facts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Nav colapsable a partir de aquí: brand + botón hamburguesa en una sola
+     fila, .nav__links pasa a un panel desplegable debajo del nav (en vez de
+     envolver en 2-3 renglones con flex-wrap, que es lo que pasaba antes
+     y es justo lo que ocupaba tanto espacio en pantallas de celular).
+     Detrás de .has-js a propósito (progressive enhancement, ver
+     mark-js-enabled.js): sin JS el botón no serviría de nada, así que sin
+     JS el nav se queda exactamente como antes (todo visible, envuelto en
+     varias filas si hace falta) en vez de mostrar un botón decorativo que
+     no abre nada. */
+  .has-js .nav__menu-toggle {
+    display: inline-flex;
+  }
+  .has-js .nav__inner {
+    flex-wrap: nowrap;
+  }
+  .has-js .nav__links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 59;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    margin: 0;
+    padding: 10px 20px 18px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, .25);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity var(--duration-base) var(--ease-reveal),
+      transform var(--duration-base) var(--ease-reveal),
+      visibility var(--duration-base);
+  }
+  .has-js .nav__links.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  /* Suprime la transición de arriba por un solo frame exactamente cuando la
+     ventana acaba de cruzar el breakpoint de 760px (ver syncToViewport() en
+     nav-menu.js) — el panel nunca estuvo realmente "abierto" en ese
+     instante, así que no debe animar un "cierre" que el usuario nunca vio
+     abrirse. Sin esto, opacity/visibility tardan var(--duration-base) en
+     aplicarse y durante ese lapso el panel sigue siendo visibility:visible
+     (por especificación, un cambio visible→hidden con transition retiene el
+     valor anterior hasta el final de la transición) justo al entrar a
+     layout móvil. No afecta la animación real de abrir/cerrar con clic,
+     Escape o clic afuera — esas siguen usando la transición normal. */
+  .has-js .nav__links.nav__links--no-transition {
+    transition: none;
+  }
+  .has-js .nav__link {
+    padding: 10px 12px;
+  }
+  .has-js .nav__icon-btn,
+  .has-js .nav__cv-btn {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .has-js .nav__links {
+      transition: none;
+    }
+  }
 }
 
 @media (max-width: 480px) {

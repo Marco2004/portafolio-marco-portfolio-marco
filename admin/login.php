@@ -22,8 +22,19 @@ if (is_logged_in()) {
 $error = null;
 $justVerified = isset($_GET['verified']);
 
+// Límite por IP además del bloqueo ya existente por cuenta
+// (register_failed_attempt()/is_locked_out(), más abajo vía
+// verify_credentials()) — ese bloqueo es por cuenta, así que no frena a
+// alguien probando muchos usuarios/correos distintos desde la misma
+// conexión. Se cuenta cada POST, exista o no la cuenta, mismo criterio que
+// el resto de los formularios de autenticación.
+$ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+$loginIpThrottled = $_SERVER['REQUEST_METHOD'] === 'POST' && rate_limit_hit($pdo, 'login_attempt', $ip, 20, 15 * 60);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !verify_csrf_field($_POST['csrf_token'] ?? null)) {
     $error = 'Token de seguridad inválido — recarga la página e intenta de nuevo.';
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $loginIpThrottled) {
+    $error = 'Demasiados intentos desde esta conexión — espera unos minutos e intenta de nuevo.';
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     // trim() para que un espacio accidental al inicio/final no cause un
@@ -89,9 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !verify_csrf_field($_POST['csrf_tok
 <html lang="es">
 <head>
 <script src="<?= asset_url('assets/js/theme-antiflash.js') ?>"></script>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Iniciar sesión — Panel de administración</title>
+<?php render_head_meta(['title' => 'Iniciar sesión — Panel de administración']) ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">

@@ -15,11 +15,9 @@
  * funcione sin cambios.
  */
 (function () {
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
+  // Definida una sola vez en admin-escape.js (window.MPVEscape), cargado
+  // antes que este archivo — ver ese archivo para el porqué.
+  var escapeHtml = window.MPVEscape.html;
 
   function parseList(raw) {
     var seen = {};
@@ -45,8 +43,9 @@
 
     function render() {
       list.innerHTML = tags.map(function (tag, i) {
+        var removePrefix = window.MPVAdminI18n ? window.MPVAdminI18n.t('admin.social.removeAriaPrefix') : 'Quitar';
         return '<span class="chip-tag">' + escapeHtml(tag) +
-          '<button type="button" class="chip-tag__remove" data-i="' + i + '" aria-label="Quitar ' + escapeHtml(tag) + '">&times;</button></span>';
+          '<button type="button" class="chip-tag__remove" data-i="' + i + '" aria-label="' + escapeHtml(removePrefix + ' ' + tag) + '">&times;</button></span>';
       }).join('');
     }
 

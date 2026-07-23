@@ -54,31 +54,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !verify_csrf_field($_POST['csrf_tok
         }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'verify') {
-    $code = trim($_POST['code'] ?? '');
-    if (verify_login_otp($pdo, $adminId, $code)) {
-        $remember = !empty($_POST['remember']);
-        complete_login($admin);
-        if ($remember) {
-            issue_trusted_device($pdo, $adminId);
+    // verify_login_otp() ya tope a 5 intentos por código (LOGIN_OTP_MAX_ATTEMPTS),
+    // pero eso no impide pedir un código nuevo (ver "resend" arriba, que sí
+    // tiene su propio límite) y volver a intentar 5 veces más — este límite
+    // por IP es una segunda capa contra adivinar códigos de 6 dígitos a lo
+    // largo de varios códigos sucesivos, mismo patrón que el resto de la
+    // autenticación.
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    if (rate_limit_hit($pdo, 'login_otp_verify', $ip, 20, 15 * 60)) {
+        $error = 'Demasiados intentos desde esta conexión — espera unos minutos e intenta de nuevo.';
+    } else {
+        $code = trim($_POST['code'] ?? '');
+        if (verify_login_otp($pdo, $adminId, $code)) {
+            $remember = !empty($_POST['remember']);
+            complete_login($admin);
+            if ($remember) {
+                issue_trusted_device($pdo, $adminId);
+            }
+            email_new_login_notice($admin['email'], [
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'desconocida',
+                'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? 'desconocido',
+                'remembered' => $remember,
+            ]);
+            header('Location: index.php');
+            exit;
         }
-        email_new_login_notice($admin['email'], [
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'desconocida',
-            'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? 'desconocido',
-            'remembered' => $remember,
-        ]);
-        header('Location: index.php');
-        exit;
+        $error = 'Código incorrecto o vencido.';
     }
-    $error = 'Código incorrecto o vencido.';
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <script src="<?= asset_url('assets/js/theme-antiflash.js') ?>"></script>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Verificar código — Panel de administración</title>
+<?php render_head_meta(['title' => 'Verificar código — Panel de administración']) ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">

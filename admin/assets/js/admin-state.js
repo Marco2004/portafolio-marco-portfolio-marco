@@ -28,6 +28,7 @@
         items: cat.items.map(function (s) { return Object.assign({}, s); }),
       };
     }),
+    skillLevels: (d.skillLevels || []).map(function (lvl) { return Object.assign({}, lvl); }),
     experience: d.experience.map(function (x) {
       return Object.assign({}, x, {
         bulletsStr: joinLines(x.bullets),
@@ -68,8 +69,16 @@
     target[last] = value;
   }
 
-  function notifyChange() {
-    document.dispatchEvent(new CustomEvent('mpv-admin:change'));
+  // immediate=true (ver admin-color-picker.js): admin-preview.js agrupa
+  // "mpv-admin:change" con una pequeña espera antes de redibujar el iframe,
+  // pensado para no reconstruir todo el HTML repetido en cada tecla mientras
+  // se escribe un textarea — pero esa misma espera hacía sentir con retraso
+  // a acciones que YA son de una sola vez, como elegir un color (nada que
+  // agrupar ahí, es un solo evento). Con esta bandera, ese cambio puntual se
+  // dibuja en el iframe al instante, igual de rápido que el resto del propio
+  // Dashboard.
+  function notifyChange(immediate) {
+    document.dispatchEvent(new CustomEvent('mpv-admin:change', { detail: { immediate: !!immediate } }));
   }
 
   // Este mismo botón ahora también cambia el idioma de la INTERFAZ del

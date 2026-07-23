@@ -86,6 +86,50 @@ function format_date_range(?string $start, ?string $end, string $lang = 'es'): s
     return $startText . ' — ' . format_es_month_year($end, $lang);
 }
 
+/**
+ * "X años Y meses" (o "X yrs Y mos") calculado en cada render a partir de
+ * start_date/end_date — a diferencia de date_range (guardado como texto fijo
+ * al momento de guardar, ver comentario de la columna en database/schema.sql),
+ * esto se recalcula solo con la fecha actual del servidor en cada visita, así
+ * que un puesto "vigente" (sin end_date) avanza de mes en mes sin que el
+ * admin tenga que volver a guardar nada — mismo criterio que LinkedIn: el
+ * mes de inicio ya cuenta como el primer mes trabajado.
+ */
+function format_duration(?string $start, ?string $end, string $lang = 'es'): string {
+    if (!$start) {
+        return '';
+    }
+    $startTs = strtotime($start);
+    if ($startTs === false) {
+        return '';
+    }
+    $endTs = $end ? strtotime($end) : time();
+    if ($endTs === false || $endTs < $startTs) {
+        return '';
+    }
+    $months = (((int) date('Y', $endTs) - (int) date('Y', $startTs)) * 12)
+        + ((int) date('n', $endTs) - (int) date('n', $startTs)) + 1;
+    $years = intdiv($months, 12);
+    $remMonths = $months % 12;
+    $parts = [];
+    if ($lang === 'en') {
+        if ($years > 0) {
+            $parts[] = $years . ' yr' . ($years > 1 ? 's' : '');
+        }
+        if ($remMonths > 0 || $years === 0) {
+            $parts[] = $remMonths . ' mo' . ($remMonths !== 1 ? 's' : '');
+        }
+    } else {
+        if ($years > 0) {
+            $parts[] = $years . ' año' . ($years > 1 ? 's' : '');
+        }
+        if ($remMonths > 0 || $years === 0) {
+            $parts[] = $remMonths . ' mes' . ($remMonths !== 1 ? 'es' : '');
+        }
+    }
+    return implode(' ', $parts);
+}
+
 function json_response($data, int $status = 200): void {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
@@ -126,10 +170,149 @@ function asset_url(string $href): string {
     return $href . '?v=' . ($v ?: '1');
 }
 
+/**
+ * Fuente única de todas las etiquetas <head> del proyecto (favicon, robots,
+ * título, descripción, Open Graph, Twitter Card) — cada página solo pasa sus
+ * datos (título, descripción, si debe indexarse, etc.), nunca repite el
+ * marcado. Cambiar el favicon, el color de tema o la plantilla de Open Graph
+ * se hace una sola vez aquí y se propaga a las 8 páginas que la llaman.
+ *
+ * Opciones:
+ *   title        (string)  Requerido en la práctica — sin él usa un default genérico.
+ *   titleI18nKey (string)  Si el título se traduce en el cliente (ver i18n.js),
+ *                          agrega el atributo data-i18n="..." al <title>.
+ *   description  (string)  Si se omite, no se emiten <meta description> ni
+ *                          las variantes og:description/twitter:description.
+ *   author       (string)  Opcional.
+ *   canonical    (string)  URL absoluta; si se omite no se emite <link rel=canonical>.
+ *   robots       (string)  Default 'noindex, nofollow' (paneles de admin/auth).
+ *   faviconBase  (string)  Ruta relativa a la carpeta del favicon.
+ *   og           (array)   Si se pasa, emite el bloque Open Graph + Twitter Card:
+ *                          ['type' => ..., 'siteName' => ..., 'image' => ...,
+ *                           'url' => ..., 'locale' => ...]. Se omite por completo
+ *                          en páginas privadas (login, panel, etc.) — no aporta
+ *                          nada a algo que nunca se comparte como enlace.
+ */
+function render_head_meta(array $opts = []): void {
+    $robots = $opts['robots'] ?? 'noindex, nofollow';
+    $faviconBase = $opts['faviconBase'] ?? '../public/assets/img/favicon/';
+    $title = $opts['title'] ?? 'Portafolio Web';
+    $description = $opts['description'] ?? null;
+    $author = $opts['author'] ?? null;
+    $canonical = $opts['canonical'] ?? null;
+    $og = $opts['og'] ?? null;
+
+    echo '<meta charset="utf-8">' . "\n";
+    echo '<meta name="viewport" content="width=device-width, initial-scale=1">' . "\n";
+    echo '<meta name="theme-color" content="#1f6feb">' . "\n";
+    echo '<meta name="robots" content="' . e($robots) . '">' . "\n";
+
+    if (!empty($opts['titleI18nKey'])) {
+        echo '<title data-i18n="' . e($opts['titleI18nKey']) . '">' . e($title) . '</title>' . "\n";
+    } else {
+        echo '<title>' . e($title) . '</title>' . "\n";
+    }
+    if ($description !== null) {
+        echo '<meta name="description" content="' . e($description) . '">' . "\n";
+    }
+    if ($author !== null) {
+        echo '<meta name="author" content="' . e($author) . '">' . "\n";
+    }
+    if ($canonical !== null) {
+        echo '<link rel="canonical" href="' . e($canonical) . '">' . "\n";
+    }
+
+    echo '<link rel="icon" type="image/png" sizes="32x32" href="' . e(asset_url($faviconBase . 'favicon-32x32.png')) . '">' . "\n";
+    echo '<link rel="icon" type="image/png" sizes="16x16" href="' . e(asset_url($faviconBase . 'favicon-16x16.png')) . '">' . "\n";
+    echo '<link rel="icon" type="image/png" sizes="192x192" href="' . e(asset_url($faviconBase . 'favicon-192x192.png')) . '">' . "\n";
+    echo '<link rel="shortcut icon" href="' . e(asset_url($faviconBase . 'favicon.ico')) . '">' . "\n";
+    echo '<link rel="apple-touch-icon" href="' . e(asset_url($faviconBase . 'apple-touch-icon.png')) . '">' . "\n";
+
+    if ($og !== null) {
+        echo '<meta property="og:type" content="' . e($og['type'] ?? 'website') . '">' . "\n";
+        echo '<meta property="og:site_name" content="' . e($og['siteName'] ?? 'Portafolio Web') . '">' . "\n";
+        echo '<meta property="og:title" content="' . e($title) . '">' . "\n";
+        if ($description !== null) {
+            echo '<meta property="og:description" content="' . e($description) . '">' . "\n";
+        }
+        if (!empty($og['image'])) {
+            echo '<meta property="og:image" content="' . e($og['image']) . '">' . "\n";
+        }
+        if (!empty($og['url'])) {
+            echo '<meta property="og:url" content="' . e($og['url']) . '">' . "\n";
+        }
+        echo '<meta property="og:locale" content="' . e($og['locale'] ?? 'es_MX') . '">' . "\n";
+        echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
+        echo '<meta name="twitter:title" content="' . e($title) . '">' . "\n";
+        if ($description !== null) {
+            echo '<meta name="twitter:description" content="' . e($description) . '">' . "\n";
+        }
+        if (!empty($og['image'])) {
+            echo '<meta name="twitter:image" content="' . e($og['image']) . '">' . "\n";
+        }
+    }
+}
+
 function json_input(): array {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true);
     return is_array($data) ? $data : [];
+}
+
+// Muy por encima de cualquier uso real de un portafolio personal — solo
+// existe para poner un techo defensivo a lo que una sesión autenticada
+// comprometida podría intentar guardar de golpe (ver api/save.php).
+const MAX_SAVE_LIST_ITEMS = 300;
+
+/**
+ * Revisa que ninguna lista del payload de guardado (proyectos, skills,
+ * experiencia, etc.) exceda MAX_SAVE_LIST_ITEMS antes de tocar la base de
+ * datos. Devuelve un mensaje de error si alguna lo excede, o null si todo
+ * está dentro de rango.
+ */
+function validate_save_payload_limits(array $data): ?string {
+    $lists = [
+        'los datos de inicio' => $data['heroFacts'] ?? [],
+        'proyectos' => $data['projects'] ?? [],
+        'categorías de skills' => $data['skills'] ?? [],
+        'niveles de skill' => $data['skillLevels'] ?? [],
+        'experiencia' => $data['experience'] ?? [],
+        'educación' => $data['educationEntries'] ?? [],
+        'certificaciones' => $data['certifications'] ?? [],
+        'redes sociales' => $data['socialLinks'] ?? [],
+        'contactos' => $data['contact']['items'] ?? [],
+    ];
+    foreach ($lists as $label => $list) {
+        if (is_array($list) && count($list) > MAX_SAVE_LIST_ITEMS) {
+            return "Demasiados elementos en \"$label\".";
+        }
+    }
+    foreach (($data['projects'] ?? []) as $p) {
+        if (is_array($p['buttons'] ?? null) && count($p['buttons']) > MAX_SAVE_LIST_ITEMS) {
+            return 'Demasiados botones en un proyecto.';
+        }
+    }
+    foreach (($data['skills'] ?? []) as $cat) {
+        if (is_array($cat['items'] ?? null) && count($cat['items']) > MAX_SAVE_LIST_ITEMS) {
+            return 'Demasiados skills en una categoría.';
+        }
+    }
+    return null;
+}
+
+/**
+ * Recorta un string al máximo de caracteres que su columna VARCHAR admite
+ * en la base de datos, ANTES de intentar guardarlo — sin esto, un texto más
+ * largo que la columna se comporta distinto según el servidor: algunos
+ * MySQL/MariaDB (sql_mode sin STRICT_TRANS_TABLES, común en hosting
+ * compartido) lo truncan en silencio sin avisar; otros con modo estricto
+ * tiran un error fatal y no guardan nada. Con esto el comportamiento es
+ * siempre el mismo (se recorta, sin error) sin importar la configuración
+ * del servidor de base de datos de turno. mb_substr (no substr) para no
+ * partir un carácter multibyte (acentos, ñ, emoji) a la mitad.
+ */
+function cap(?string $s, int $max): string {
+    return mb_substr(trim($s ?? ''), 0, $max);
 }
 
 function csv_to_array(string $s): array {
@@ -183,6 +366,8 @@ function icon(string $name): string {
         'compress' => '<path d="M4 9h5V4M20 9h-5V4M4 15h5v5M20 15h-5v5"/>',
         'chevron-left' => '<path d="M15 5 8 12l7 7"/>',
         'chevron-right' => '<path d="M9 5l7 7-7 7"/>',
+        'chevron-down' => '<path d="M5 9l7 7 7-7"/>',
+        'revert' => '<path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
         'sun' => '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/>',
         'moon' => '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/>',
         'monitor' => '<rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M8.5 20h7M12 16.5V20"/>',
@@ -261,14 +446,20 @@ function contact_link_href(string $value): ?string {
 }
 
 /**
- * Devuelve el texto en inglés si el admin ya lo tradujo, si no cae de
- * regreso al español (para que nada se vea vacío mientras se va traduciendo).
+ * Devuelve el texto del idioma activo si existe; si falta, cae de regreso al
+ * del otro idioma en vez de dejarlo vacío — en los dos sentidos (antes solo
+ * caía ES→EN cuando faltaba la traducción al inglés; si faltaba el español
+ * se mostraba en blanco incluso habiendo texto en inglés, comportamiento
+ * inconsistente detectado en Ficha rápida/Habilidades al crear contenido
+ * primero en inglés).
  */
 function t(?string $es, ?string $en, string $lang): string {
-    if ($lang === 'en' && $en !== null && trim($en) !== '') {
-        return $en;
+    $es ??= '';
+    $en ??= '';
+    if ($lang === 'en') {
+        return trim($en) !== '' ? $en : $es;
     }
-    return $es ?? '';
+    return trim($es) !== '' ? $es : $en;
 }
 
 /**
@@ -308,26 +499,55 @@ function safe_social_url(?string $url): string {
 
 /**
  * Igual que t() pero para listas (viñetas, métricas, idiomas). Empareja por
- * índice; si la línea en inglés en esa posición falta, usa la española.
+ * índice; si la línea del idioma activo en esa posición falta, usa la del
+ * otro idioma — mismo fallback bidireccional que t() (ver su docblock).
  */
 function t_list(array $es, array $en, string $lang): array {
-    if ($lang !== 'en' || empty($en)) {
-        return $es;
+    if ($lang === 'en') {
+        if (empty($en)) {
+            return $es;
+        }
+        $out = [];
+        foreach ($es as $i => $line) {
+            $out[] = (($en[$i] ?? '') !== '') ? $en[$i] : $line;
+        }
+        return $out;
+    }
+    if (empty($es)) {
+        return $en;
     }
     $out = [];
-    foreach ($es as $i => $line) {
-        $out[] = ($en[$i] ?? '') !== '' ? $en[$i] : $line;
+    $count = max(count($es), count($en));
+    for ($i = 0; $i < $count; $i++) {
+        $esLine = $es[$i] ?? '';
+        $out[] = $esLine !== '' ? $esLine : ($en[$i] ?? '');
     }
     return $out;
+}
+
+/**
+ * Separa una línea "Idioma — descripción" (formato libre que el admin escribe
+ * en la lista de Idiomas de Educación, ver admin-forms.js) en sus dos partes
+ * ya recortadas. Sin "—" en la línea, $desc queda ''. Antes esta misma
+ * expresión (array_pad + array_map('trim', explode(...))) estaba repetida de
+ * forma idéntica en Cv.php y public/index.php.
+ */
+function split_lang_line(string $line): array {
+    return array_pad(array_map('trim', explode('—', $line, 2)), 2, '');
 }
 
 /**
  * Atributos data-i18n-dynamic/data-es/data-en listos para pegar en una
  * etiqueta HTML, para que i18n.js pueda intercambiar el texto sin recargar
  * la página. Uso: <p<?= dyn_attrs($hero['desc'], $hero['descEn']) ?>>...
+ * Ambos atributos pasan por t() (mismo fallback bidireccional) para que
+ * alternar el idioma en el cliente coincida exactamente con lo que se vería
+ * si la página se recargara en ese idioma — sin esto, volver a "es" después
+ * de haber estado en "en" podía mostrar vacío si $es estaba vacío, aunque el
+ * primer render (con fallback) sí hubiera mostrado el texto en inglés.
  */
 function dyn_attrs(?string $es, ?string $en): string {
-    return ' data-i18n-dynamic data-es="' . e($es) . '" data-en="' . e(t($es, $en, 'en')) . '"';
+    return ' data-i18n-dynamic data-es="' . e(t($es, $en, 'es')) . '" data-en="' . e(t($es, $en, 'en')) . '"';
 }
 
 /**
@@ -347,13 +567,178 @@ function strip_url_scheme(string $url): string {
     return preg_replace('#^(https?://(www\.)?|mailto:)#i', '', $url);
 }
 
+/**
+ * Ciudad/región/país aproximados de una IP pública, para el correo de
+ * "Nuevo inicio de sesión" (a petición explícita: el correo debe decir desde
+ * dónde fue el acceso, no solo la IP en crudo). Usa ipapi.co (HTTPS, sin
+ * API key para este volumen — un solo login ocasional, muy lejos de su
+ * límite gratuito) en vez de un servicio con clave para no sumar otro
+ * secreto que administrar en .env solo para esto.
+ *
+ * Nunca bloquea el login si falla: timeout corto (mismo criterio que
+ * send_email() en Mailer.php) y devuelve null en cualquier error/IP privada
+ * — el correo simplemente omite la línea de ubicación en ese caso, nunca
+ * detiene ni retrasa perceptiblemente el flujo de acceso.
+ */
+function geolocate_ip(string $ip): ?string {
+    if ($ip === '' || $ip === 'desconocida' || !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+        // IP vacía, privada (LAN/localhost, típico en XAMPP local) o reservada
+        // — ningún servicio de geolocalización puede resolver esas.
+        return null;
+    }
+
+    $ch = curl_init('https://ipapi.co/' . rawurlencode($ip) . '/json/');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 2,
+        CURLOPT_TIMEOUT => 3,
+        CURLOPT_HTTPHEADER => ['Accept: application/json'],
+    ]);
+    $response = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($response === false || $status < 200 || $status >= 300) {
+        return null;
+    }
+    $data = json_decode($response, true);
+    if (!is_array($data) || !empty($data['error'])) {
+        return null;
+    }
+    $parts = array_filter([$data['city'] ?? null, $data['region'] ?? null, $data['country_name'] ?? null]);
+    return $parts ? implode(', ', $parts) : null;
+}
+
+/**
+ * Traduce un User-Agent crudo a algo legible para un humano ("Chrome en
+ * Windows · Escritorio") — usado en el correo de "Nuevo inicio de sesión"
+ * (ver email_new_login_notice() en Mailer.php) para que el destinatario
+ * entienda de un vistazo desde dónde fue el acceso, en vez de tener que leer
+ * el string completo del navegador. Detección simple por substring/regex,
+ * sin librería externa (fuera de alcance agregar una dependencia nueva solo
+ * para esto) — no pretende ser exhaustiva, cubre los casos comunes.
+ */
+function parse_user_agent(?string $ua): array {
+    $ua = trim($ua ?? '');
+    if ($ua === '') {
+        return ['os' => 'Sistema desconocido', 'browser' => 'Navegador desconocido', 'device' => 'Dispositivo desconocido'];
+    }
+
+    $os = 'Sistema desconocido';
+    if (preg_match('/Windows NT 10\.0/i', $ua)) {
+        $os = 'Windows 10/11';
+    } elseif (preg_match('/Windows NT/i', $ua)) {
+        $os = 'Windows';
+    } elseif (preg_match('/iPhone|iPad|iPod/i', $ua)) {
+        $os = 'iOS';
+    } elseif (preg_match('/Mac OS X/i', $ua)) {
+        $os = 'macOS';
+    } elseif (preg_match('/Android/i', $ua)) {
+        $os = 'Android';
+    } elseif (preg_match('/Linux/i', $ua)) {
+        $os = 'Linux';
+    }
+
+    $browser = 'Navegador desconocido';
+    if (preg_match('/Edg\//i', $ua)) {
+        $browser = 'Microsoft Edge';
+    } elseif (preg_match('/OPR\/|Opera/i', $ua)) {
+        $browser = 'Opera';
+    } elseif (preg_match('/Chrome\//i', $ua) && !preg_match('/Chromium/i', $ua)) {
+        $browser = 'Google Chrome';
+    } elseif (preg_match('/Firefox\//i', $ua)) {
+        $browser = 'Mozilla Firefox';
+    } elseif (preg_match('/Version\/.*Safari\//i', $ua)) {
+        $browser = 'Safari';
+    }
+
+    $device = 'Escritorio';
+    if (preg_match('/iPad|Tablet/i', $ua)) {
+        $device = 'Tablet';
+    } elseif (preg_match('/Mobile|Android/i', $ua)) {
+        $device = 'Móvil';
+    }
+
+    return ['os' => $os, 'browser' => $browser, 'device' => $device];
+}
+
+/**
+ * Valida un color hex #RRGGBB (LED de disponibilidad, nivel de habilidad
+ * personalizado — ver database/migrations/2026_07_20_customization.sql)
+ * antes de guardarlo o de usarlo dentro de un atributo style="" — igual
+ * espíritu que safe_url(): nunca confiar en un string del cliente para
+ * inyectarlo tal cual en HTML/CSS. Devuelve null (= "sin personalizar", cae
+ * de regreso al color por defecto) si no es un hex válido de 6 dígitos.
+ */
+function safe_hex_color(?string $hex): ?string {
+    $hex = trim($hex ?? '');
+    if ($hex === '') {
+        return null;
+    }
+    return preg_match('/^#[0-9a-fA-F]{6}$/', $hex) ? strtolower($hex) : null;
+}
+
+/**
+ * Atributo style="" para un LED/punto de estado (disponibilidad de Inicio y
+ * de Contacto) con un color hex ya validado (ver safe_hex_color()) — replica
+ * en hex+alpha el mismo tratamiento visual que ya tenían los CSS fijos
+ * (.hero__badge-dot/.availability-badge__dot: color sólido + halo suave al
+ * 22% de opacidad). Vacío si $hex es null: en ese caso el elemento se queda
+ * sin style="" y cae de regreso al CSS existente (var(--green)), que sigue
+ * siendo el único que se adapta solo a claro/oscuro.
+ */
+function dot_color_style(?string $hex): string {
+    if ($hex === null) {
+        return '';
+    }
+    return ' style="background:' . e($hex) . '; box-shadow:0 0 0 4px ' . e($hex) . '38;"';
+}
+
+/**
+ * Para la insignia de disponibilidad de Contacto (.availability-badge): el
+ * color personalizado no debía quedarse solo en el punto — el fondo y el
+ * borde de la insignia completa seguían fijos en verde (var(--green)) sin
+ * importar qué color se eligiera para el LED, un desajuste visual obvio si
+ * se elegía, por ejemplo, rojo. Mismas proporciones que ya usaba el CSS fijo
+ * (fondo al 12%, borde al 35%), solo que ahora a partir del color elegido:
+ * 1F en hex ≈ 12% de opacidad, 59 ≈ 35% (mismo sufijo que ya usa
+ * skill_level_pill_style() de abajo para ese mismo 35%).
+ */
+function badge_color_style(?string $hex): string {
+    if ($hex === null) {
+        return '';
+    }
+    return ' style="background:' . e($hex) . '1F; border-color:' . e($hex) . '59;"';
+}
+
+/**
+ * Igual que dot_color_style() pero para el pill de nivel de habilidad
+ * (.level-pill): solo color de texto + borde al 35% de opacidad, sin fondo
+ * — mismo tratamiento que .level-pill--green/--amber/--neutral en hex+alpha.
+ */
+function skill_level_pill_style(?string $hex): string {
+    if ($hex === null) {
+        return '';
+    }
+    return ' style="color:' . e($hex) . '; border-color:' . e($hex) . '59;"';
+}
+
 function skill_level_pill_class(string $level): string {
     $l = mb_strtolower($level);
-    if (str_contains($l, 'intermedio') || str_contains($l, 'avanzado')) {
+    if (str_contains($l, 'avanzado')) {
         return 'level-pill--green';
+    }
+    if (str_contains($l, 'intermedio')) {
+        return 'level-pill--accent';
     }
     if (str_contains($l, 'básico') || str_contains($l, 'basico')) {
         return 'level-pill--amber';
+    }
+    if (str_contains($l, 'herramienta')) {
+        return 'level-pill--purple';
+    }
+    if (str_contains($l, 'sistema')) {
+        return 'level-pill--teal';
     }
     return 'level-pill--neutral';
 }

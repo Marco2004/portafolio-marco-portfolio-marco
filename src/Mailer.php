@@ -165,13 +165,37 @@ function email_password_reset_confirmed(string $to): bool {
 
 /**
  * $meta: ['ip' => string, 'userAgent' => string, 'remembered' => bool].
+ * Formato inspirado en las alertas de acceso de Google: encabezado directo
+ * ("¿Fuiste tú?"), dispositivo/navegador traducidos a texto legible (ver
+ * parse_user_agent() en helpers.php) en vez del User-Agent crudo, y un botón
+ * de acción claro — no solo una línea de texto al final — para restablecer
+ * la contraseña si el acceso no fue reconocido.
  */
 function email_new_login_notice(string $to, array $meta): bool {
-    $body = '<p>Se inició sesión en el panel de administración el ' . e(date('d/m/Y \a \l\a\s H:i')) . '.</p>
-        <p><strong>IP:</strong> ' . e($meta['ip'] ?? 'desconocida') . '<br>
-        <strong>Dispositivo/navegador:</strong> ' . e($meta['userAgent'] ?? 'desconocido') . '<br>
-        <strong>Dispositivo recordado:</strong> ' . ($meta['remembered'] ? 'Sí, por ' . TRUSTED_DEVICE_DAYS . ' días' : 'No') . '</p>
-        <p>Si no fuiste tú, restablece tu contraseña de inmediato desde la pantalla de inicio de sesión.</p>';
-    $html = render_email('Nuevo inicio de sesión', $body);
+    $ua = parse_user_agent($meta['userAgent'] ?? '');
+    $deviceSummary = $ua['browser'] . ' en ' . $ua['os'] . ' · ' . $ua['device'];
+    $rememberedText = $meta['remembered']
+        ? 'Sí — no se te volverá a pedir un código de acceso en este dispositivo durante ' . TRUSTED_DEVICE_DAYS . ' días.'
+        : 'No — la próxima vez que inicies sesión desde aquí se te pedirá un código de acceso.';
+    // geolocate_ip() nunca lanza ni retrasa perceptiblemente esto (timeout de
+    // 2-3s, ver su docblock en helpers.php) — si falla o la IP es privada
+    // (ej. red local de XAMPP) simplemente se omite la línea de ubicación.
+    $location = geolocate_ip($meta['ip'] ?? '');
+
+    $body = '<p>Detectamos un nuevo inicio de sesión en tu panel de administración de ' . e(SITE_NAME) . '. Si fuiste tú, no necesitas hacer nada más.</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0; background:#0d1117; border:1px solid #21262d; border-radius:10px;">
+          <tr><td style="padding:14px 18px;">
+            <p style="margin:0 0 8px; color:#e6edf3; font-weight:600; font-size:14px;">' . e($deviceSummary) . '</p>
+            <p style="margin:0; color:#8b949e; font-size:13px; line-height:1.7;">
+              Fecha: ' . e(date('d/m/Y \a \l\a\s H:i')) . '<br>' .
+              ($location ? 'Ubicación aproximada: ' . e($location) . '<br>' : '') . '
+              Dirección IP: ' . e($meta['ip'] ?? 'desconocida') . '<br>
+              Dispositivo recordado: ' . e($rememberedText) . '
+            </p>
+          </td></tr>
+        </table>
+        <p style="color:#6e7681; font-size:12px;">La ubicación es aproximada (se calcula a partir de la IP, no de GPS) y puede no coincidir exactamente con tu ubicación real, sobre todo en redes móviles o VPN.</p>
+        <p><strong>¿No fuiste tú?</strong> Alguien más podría tener tu contraseña — restablécela de inmediato con el botón de abajo. Eso cierra todas las sesiones y dispositivos recordados.</p>';
+    $html = render_email('Nuevo inicio de sesión', $body, ['label' => 'Restablecer contraseña', 'url' => site_url('/admin/forgot-password.php')]);
     return send_email($to, 'Nuevo inicio de sesión — ' . SITE_NAME, $html);
 }

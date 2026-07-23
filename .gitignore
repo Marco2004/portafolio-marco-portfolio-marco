@@ -21,3 +21,24 @@ Thumbs.db
 
 # Estado interno de Claude Code (sesiones/locks) — herramienta, no proyecto.
 .claude/
+
+# Guía para Claude Code sobre las convenciones del proyecto (arquitectura,
+# reglas de seguridad no negociables, comandos) — instrucciones para trabajar
+# en el repo, no código ni contenido del proyecto en sí, así que no se sube.
+CLAUDE.md
+
+# Pruebas E2E (Playwright/Python, ver tests/e2e/README.md): la sesión
+# guardada trae cookies reales (gate/login), y __pycache__ es un artefacto
+# de Python, ninguno de los dos debe terminar en el repo.
+tests/e2e/.admin_storage_state.json
+tests/e2e/.qa_storage_state.json
+tests/e2e/__pycache__/
+
+# Ningún .php debe volver a vivir bajo tests/: un script PHP ahí (ver
+# auditoría de seguridad) quedaba ejecutable por HTTP sin autenticación
+# porque tests/ nunca tuvo el mismo .htaccess de "Require all denied" que
+# ya protege src/, database/ e i18n/ (ahora sí lo tiene, ver tests/.htaccess
+# — esto es una segunda capa por si algún día falta AllowOverride en el
+# hosting). Los scripts .py de Playwright nunca necesitan ejecutarse vía
+# Apache, así que no hace falta excluirlos a ellos.
+tests/**/*.php

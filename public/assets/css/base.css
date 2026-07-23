@@ -16,6 +16,14 @@
 html {
   scrollbar-color: var(--border-2) var(--bg-2);
   scrollbar-width: thin;
+  /* Red de seguridad contra scroll horizontal fantasma — confirmado con
+     Playwright en 375/390px: sin esto, cualquier elemento que se desborde
+     por accidente (o que se posicione fuera de pantalla con transform,
+     como el drawer del sidebar en el dashboard) agrega una barra de scroll
+     horizontal aunque nada se vea realmente cortado. No recorta contenido
+     visible: cada sección que sí necesita su propio scroll lateral (bloque
+     de código, tablas) ya declara su overflow-x:auto por separado. */
+  overflow-x: hidden;
 }
 
 *::-webkit-scrollbar {
@@ -56,30 +64,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Al alternar tema, theme.js pone esta clase en <html> durante
-   --duration-theme para que TODO lo que cambia de color por el cambio de
-   tema (fondos —incluidos degradados como --auth-bg—, texto, bordes,
-   rellenos SVG) se anime al mismo ritmo, con la misma curva --ease-reveal
-   que el resto del sitio. Es !important a propósito: cada botón/input tiene
-   su propia transición corta (--duration-fast) para hover/foco, y sin pisarla
-   aquí esa transición "de paso" también se disparaba con el cambio de tema
-   — el fondo de la página cambiaba de golpe (sin transición propia) mientras
-   un botón cercano fundía a su propio ritmo de hover, descoordinado. Se
-   anima "background" completo (no solo background-color) porque el shorthand
-   con un degradado fija background-image, no background-color. Se quita sola
-   pasado ese tiempo para no frenar las transiciones normales de hover el
-   resto del tiempo. */
-.theme-transitioning,
-.theme-transitioning * {
-  transition: background var(--duration-theme) var(--ease-reveal), color var(--duration-theme) var(--ease-reveal), border-color var(--duration-theme) var(--ease-reveal), fill var(--duration-theme) var(--ease-reveal) !important;
-}
-@media (prefers-reduced-motion: reduce) {
-  .theme-transitioning,
-  .theme-transitioning * {
-    transition: none !important;
-  }
-}
-
 h1, h2, h3, p, ul {
   margin: 0;
 }
@@ -105,7 +89,16 @@ a {
   margin: 0 auto;
   padding: 56px 32px;
   border-top: 1px solid var(--border);
+  /* Reserva el alto del <nav> sticky para que no tape el inicio de la
+     sección al hacer scroll a un anchor. Dentro de la vista previa del
+     Dashboard ese <nav> ni siquiera se renderiza (ver $isPreview en
+     public/index.php) — sin este ajuste, el aterrizaje del scroll dejaba un
+     hueco de ~80px de más (se veía todavía el final de la sección anterior)
+     porque reservaba espacio para un header que ahí no existe. */
   scroll-margin-top: 80px;
+}
+body.is-preview .section {
+  scroll-margin-top: 0;
 }
 
 .section-kicker {
@@ -152,7 +145,17 @@ a {
   font-size: 14px;
   text-decoration: none;
   font-family: var(--font-sans);
-  transition: filter var(--duration-base) ease, background-color var(--duration-base) ease, border-color var(--duration-base) ease, color var(--duration-base) ease, transform var(--duration-base) ease;
+  transition: filter var(--duration-base) ease, background-color var(--duration-base) ease, border-color var(--duration-base) ease, color var(--duration-base) ease, transform var(--duration-instant) ease;
+}
+/* Feedback de presión (--duration-instant, ver variables.css) para los 4
+   estilos de botón a la vez — antes solo .btn-save (dashboard) lo tenía;
+   aquí se agrega también el "levantado" al pasar el mouse para que quede
+   claro que es clicable ANTES de tocarlo, no solo al soltar. */
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: scale(.97);
 }
 
 .btn-primary {
@@ -179,6 +182,9 @@ a {
   color: #fff;
   padding: 11px 18px;
   font-size: 13.5px;
+}
+.btn-accent:hover {
+  filter: brightness(1.08);
 }
 
 .btn-outline {

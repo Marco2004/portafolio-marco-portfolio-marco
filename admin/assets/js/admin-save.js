@@ -7,6 +7,7 @@
         return Object.assign({}, p, { stack: utils.splitCsv(p.stackStr) });
       }),
       skills: state.skills,
+      skillLevels: state.skillLevels,
       // endDate solo se limpia AQUÍ, al armar lo que se manda a guardar — en
       // el estado en vivo se deja intacta (ver bindExperienceList()) para que
       // desmarcar "trabajo aquí actualmente" restaure la fecha anterior en la
@@ -64,8 +65,40 @@
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelector('[data-save]').addEventListener('click', function (e) {
       var btn = e.currentTarget;
-      btn.disabled = true;
       var t = window.MPVAdminI18n ? window.MPVAdminI18n.t : function (k) { return k; };
+
+      // Bloquea el guardado por completo si alguna habilidad quedó con un
+      // nivel "huérfano" (eliminado de la lista, ver combo:delete-option en
+      // admin-forms.js) — el aviso visual (ícono ámbar junto al selector)
+      // no basta, porque se puede guardar por encima sin notarlo. Mismo
+      // criterio que la validación de "un solo proyecto insignia": no deja
+      // avanzar y señala exactamente dónde está el problema.
+      var pending = window.MPVAdminForms && window.MPVAdminForms.findNeedsReviewSkill();
+      if (pending) {
+        if (window.MPVAdmin.showSection) window.MPVAdmin.showSection('skills');
+        showToast(t('admin.toast.needsReviewError').replace('%NAME%', pending.skillName), true, 'center');
+        // Si la categoría está colapsada (acordeón), la fila existe en el
+        // DOM pero con alto 0 — se abre a mano antes de intentar hacer
+        // scroll hacia ella, si no el scrollIntoView no tendría a dónde ir.
+        var cat = window.MPVAdmin.state.skills[pending.catIndex];
+        if (cat && !cat._open) {
+          cat._open = true;
+          window.MPVAdminForms.renderAll();
+        }
+        requestAnimationFrame(function () {
+          var row = document.querySelector('[data-cat-row][data-index="' + pending.catIndex + '"] [data-item-index="' + pending.itemIndex + '"]');
+          if (!row) return;
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          var combo = row.querySelector('[data-combo]');
+          var target = combo || row;
+          target.classList.remove('is-field-shaking');
+          void target.offsetWidth;
+          target.classList.add('is-field-shaking');
+        });
+        return;
+      }
+
+      btn.disabled = true;
       showToast(t('admin.toast.saving'), 'loading');
       var payload = buildPayload(window.MPVAdmin.state, window.MPVAdmin.utils);
       fetch('../api/save.php', {

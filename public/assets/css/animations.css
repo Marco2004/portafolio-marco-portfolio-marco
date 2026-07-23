@@ -12,8 +12,11 @@
  * Estado inicial de los bloques [data-reveal]: ocultos y desplazados.
  * scroll-reveal.js los anima a opacity:1/transform:none la primera vez que
  * entran al viewport (ver README de diseño: 0.7s cubic-bezier(.22,.61,.36,1),
- * stagger de 90ms entre hermanos). Si JS no corre (o prefers-reduced-motion),
- * este CSS por sí solo ya deja todo visible — .no-js hace ese fallback.
+ * stagger de 90ms entre hermanos). prefers-reduced-motion ya se resuelve en
+ * el propio scroll-reveal.js (revela directo, sin animar). Si JS no corre en
+ * absoluto, <html> nace con class="no-js" (ver public/index.php) y
+ * mark-js-enabled.js la quita en cuanto corre — mientras siga puesta, esta
+ * regla deja todo visible sin depender de que JS llegue a ejecutarse.
  */
 [data-reveal] {
   opacity: 0;
@@ -27,8 +30,7 @@
   transform: none;
 }
 
-.no-js [data-reveal],
-.reduce-motion [data-reveal] {
+.no-js [data-reveal] {
   opacity: 1;
   transform: none;
   transition: none;

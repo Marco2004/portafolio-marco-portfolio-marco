@@ -26,24 +26,11 @@
     return storedMode() || systemMode();
   }
 
-  // 1000ms — debe coincidir con --duration-theme en variables.css. Mientras
-  // dura, .theme-transitioning (ver base.css) hace que TODO lo que cambia de
-  // color por el tema se anime a esta misma velocidad, en vez de que cada
-  // elemento use la duración que tenga declarada para su propia transición
-  // de hover/foco (o ninguna) — eso hacía que unas cosas cambiaran de golpe
-  // mientras otras (las que sí tenían su propia transición a
-  // --duration-theme, como <body>/.nav) fundían mucho más lento.
-  var THEME_TRANSITION_MS = 1000;
-  var themeTransitionTimer = null;
-
+  // El cambio de tema es instantáneo (data-theme se aplica directo, sin
+  // clase .theme-transitioning ni cross-fade de colores) — a petición
+  // explícita de Marco, que no quería la animación de 1000ms que antes
+  // envolvía todo el cambio de claro/oscuro.
   function applyMode(mode) {
-    if (!reduceMotion) {
-      root.classList.add('theme-transitioning');
-      clearTimeout(themeTransitionTimer);
-      themeTransitionTimer = setTimeout(function () {
-        root.classList.remove('theme-transitioning');
-      }, THEME_TRANSITION_MS);
-    }
     root.setAttribute('data-theme', mode);
   }
 

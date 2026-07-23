@@ -38,10 +38,16 @@
     var collapseIcon = document.querySelector('[data-sidebar-collapse-icon]');
     if (!collapseBtn) return;
 
+    function collapseLabel(collapsed) {
+      var key = collapsed ? 'admin.sidebar.expand' : 'admin.sidebar.collapse';
+      var fallback = collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral';
+      return window.MPVAdminI18n ? window.MPVAdminI18n.t(key) : fallback;
+    }
+
     function setCollapsed(collapsed, persist) {
       sidebar.classList.toggle('is-collapsed', collapsed);
-      collapseBtn.setAttribute('aria-label', collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral');
-      collapseBtn.setAttribute('title', collapsed ? 'Expandir barra lateral' : 'Contraer barra lateral');
+      collapseBtn.setAttribute('aria-label', collapseLabel(collapsed));
+      collapseBtn.setAttribute('title', collapseLabel(collapsed));
       if (collapseIcon) collapseIcon.innerHTML = collapsed ? window.MPVIcons.chevronRight : window.MPVIcons.chevronLeft;
       if (persist) {
         try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (e) {}
@@ -54,6 +60,13 @@
 
     collapseBtn.addEventListener('click', function () {
       setCollapsed(!sidebar.classList.contains('is-collapsed'), true);
+    });
+    // El aria-label/title dependen del idioma de interfaz — sin esto se
+    // quedaban en español al cambiar a inglés aunque el botón sí mostrara
+    // "Collapse sidebar" en su estado inicial (data-i18n-title en
+    // admin/index.php), porque esta función los sobrescribe en cada toggle.
+    document.addEventListener('mpv-admin:langchange', function () {
+      setCollapsed(sidebar.classList.contains('is-collapsed'), false);
     });
   });
 })();

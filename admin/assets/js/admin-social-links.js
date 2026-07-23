@@ -64,11 +64,9 @@
     return DOMAIN_MAP[host] || { icon: 'link', label: host || url };
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
+  // Definida una sola vez en admin-escape.js (window.MPVEscape), cargado
+  // antes que este archivo — ver ese archivo para el porqué.
+  var escapeHtml = window.MPVEscape.html;
 
   // Acepta http(s)://, mailto: y una dirección de correo suelta (se
   // normaliza a mailto: en normalizeUrl antes de guardarse).
@@ -97,18 +95,19 @@
         return '<span class="chip-tag">' +
           '<span class="chip-tag__icon">' + (ICONS[platform.icon] || ICONS.link) + '</span>' +
           escapeHtml(platform.label) +
-          '<button type="button" class="chip-tag__remove" data-i="' + i + '" aria-label="Quitar ' + escapeHtml(platform.label) + '">&times;</button></span>';
+          '<button type="button" class="chip-tag__remove" data-i="' + i + '" aria-label="' + escapeHtml((window.MPVAdminI18n ? window.MPVAdminI18n.t('admin.social.removeAriaPrefix') : 'Quitar') + ' ' + platform.label) + '">&times;</button></span>';
       }).join('');
     }
 
     function addUrl(raw) {
       var url = raw.trim();
       if (!isHttpUrl(url)) {
-        window.MPVAdmin.showToast && window.MPVAdmin.showToast('Pega una URL completa (empieza con https://) o un correo electrónico', true);
+        var msg = window.MPVAdminI18n ? window.MPVAdminI18n.t('admin.social.urlError') : 'Pega una URL completa (empieza con https://) o un correo electrónico';
+        window.MPVAdmin.showToast && window.MPVAdmin.showToast(msg, true);
         return;
       }
       state.socialLinks.push({ url: normalizeUrl(url) });
-      window.MPVAdmin.notifyChange();
+      window.MPVAdmin.notifyChange(true);
       render();
     }
 
@@ -141,11 +140,15 @@
       var chip = btn.closest('.chip-tag');
       if (window.MPVAdmin.dustDisintegrate) await window.MPVAdmin.dustDisintegrate(chip);
       state.socialLinks.splice(Number(btn.dataset.i), 1);
-      window.MPVAdmin.notifyChange();
+      window.MPVAdmin.notifyChange(true);
       render();
     });
 
     render();
+    // El aria-label "Quitar {red}" de cada chip depende del idioma de
+    // interfaz — sin esto se quedaba en español al cambiar a inglés, igual
+    // que pasaba con los paneles de admin-forms.js (ver su mismo listener).
+    document.addEventListener('mpv-admin:langchange', render);
   }
 
   document.addEventListener('DOMContentLoaded', enhance);

@@ -6,9 +6,15 @@
 -- el sitio público y el CV caen de regreso al valor en español. Los campos
 -- sin gemelo "_en" no se traducen (nombres propios, URLs, tecnologías,
 -- fechas, valores numéricos, datos de contacto).
+--
+-- OJO al desplegar en hosting compartido: ahí la base de datos casi siempre
+-- ya existe con un nombre que decide el proveedor (no con permiso de
+-- CREATE DATABASE para el usuario de la BD) — hay que borrar o comentar las
+-- líneas CREATE DATABASE/USE de abajo antes de importar este archivo. En
+-- XAMPP local no hace falta tocar nada.
 
 CREATE DATABASE IF NOT EXISTS portafolio CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE portafolio
+USE portafolio;
 
 -- Fila única (id=1) con los datos del hero. El tema/idioma del sitio público
 -- ya no tienen un default configurable desde el dashboard (columnas
@@ -21,6 +27,9 @@ CREATE TABLE hero (
   id INT PRIMARY KEY,
   avail VARCHAR(255) NOT NULL,
   avail_en VARCHAR(255),
+  -- Color del LED de disponibilidad (hex #RRGGBB), independiente del texto —
+  -- NULL = verde por defecto (mismo aspecto que antes de poder personalizarlo).
+  avail_color VARCHAR(20) NULL,
   name VARCHAR(120) NOT NULL,
   role VARCHAR(160) NOT NULL,
   role_en VARCHAR(160),
@@ -40,7 +49,8 @@ CREATE TABLE hero_facts (
   label_en VARCHAR(80) NULL,
   value VARCHAR(200) NOT NULL,
   value_en VARCHAR(200) NULL,
-  sort_order INT NOT NULL DEFAULT 0
+  sort_order INT NOT NULL DEFAULT 0,
+  INDEX idx_sort (sort_order, id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE projects (
@@ -55,6 +65,10 @@ CREATE TABLE projects (
   impact VARCHAR(255),
   impact_en VARCHAR(255),
   stack VARCHAR(255) COMMENT 'lista separada por comas, ej: PHP,MySQL,Responsive',
+  -- demo_url/code_url ya no son la fuente de verdad de los botones del CTA
+  -- (ver tabla project_buttons abajo) — se dejan aquí sin borrar solo para
+  -- que Portfolio::getAll() pueda auto-migrar proyectos guardados antes de
+  -- este cambio la primera vez que se leen.
   demo_url VARCHAR(255),
   code_url VARCHAR(255),
   image_path VARCHAR(255) COMMENT 'ruta relativa dentro de uploads/projects/',
@@ -77,14 +91,31 @@ CREATE TABLE projects (
   stat3_label VARCHAR(120),
   stat3_label_en VARCHAR(120),
   sort_order INT NOT NULL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_sort (sort_order, id)
+) ENGINE=InnoDB;
+
+-- Botones del CTA de cada proyecto (Demo, Código, o cualquier otro que el
+-- admin quiera agregar) — cantidad, texto y estilo libres, reemplaza los
+-- 2 botones fijos que antes vivían como demo_url/code_url en projects.
+CREATE TABLE project_buttons (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  project_id INT NOT NULL,
+  label VARCHAR(80) NOT NULL,
+  label_en VARCHAR(80) NULL,
+  url VARCHAR(255) NOT NULL,
+  style ENUM('primary', 'secondary') NOT NULL DEFAULT 'secondary',
+  sort_order INT NOT NULL DEFAULT 0,
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  INDEX idx_sort (sort_order, id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE skill_categories (
   id INT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(120) NOT NULL,
   name_en VARCHAR(120),
-  sort_order INT NOT NULL DEFAULT 0
+  sort_order INT NOT NULL DEFAULT 0,
+  INDEX idx_sort (sort_order, id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE skills (
@@ -93,9 +124,38 @@ CREATE TABLE skills (
   name VARCHAR(120) NOT NULL COMMENT 'nombre de la tecnología, no se traduce',
   level VARCHAR(60) NOT NULL COMMENT 'ej: Intermedio, Básico, Herramienta, Sistema',
   level_en VARCHAR(60),
+  -- Color del pill de nivel (hex #RRGGBB) — NULL = se infiere del texto de
+  -- "level" (compatibilidad con datos existentes, ver skill_level_pill_class()
+  -- en src/helpers.php); se vuelve explícito en cuanto se guarda de nuevo.
+  level_color VARCHAR(20) NULL,
   sort_order INT NOT NULL DEFAULT 0,
-  FOREIGN KEY (category_id) REFERENCES skill_categories(id) ON DELETE CASCADE
+  FOREIGN KEY (category_id) REFERENCES skill_categories(id) ON DELETE CASCADE,
+  INDEX idx_sort (sort_order, id)
 ) ENGINE=InnoDB;
+
+-- Lista de niveles de habilidad gestionable por el admin (nombre + color) —
+-- ya no son 5 presets fijos por código, ver Portfolio::getAll()/saveAll().
+-- Se siembra con los 5 valores de siempre para que un proyecto nuevo arranque
+-- con las mismas sugerencias que antes venían hardcodeadas.
+-- label/label_en son AMBAS nullable a propósito: una definición agregada
+-- por el admin vive en UN solo idioma a la vez (sin traducción automática,
+-- ver skillLevelField() en admin-forms.js) — solo los 5 presets sembrados
+-- abajo traen los dos de una vez.
+CREATE TABLE skill_levels (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  label VARCHAR(60) NULL,
+  label_en VARCHAR(60) NULL,
+  color VARCHAR(20) NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  INDEX idx_sort (sort_order, id)
+) ENGINE=InnoDB;
+
+INSERT INTO skill_levels (label, label_en, color, sort_order) VALUES
+  ('Básico', 'Basic', '#d29922', 0),
+  ('Intermedio', 'Intermediate', '#58a6ff', 1),
+  ('Avanzado', 'Advanced', '#3fb950', 2),
+  ('Herramienta', 'Tool', '#a371f7', 3),
+  ('Sistema', 'System', '#39c5cf', 4);
 
 CREATE TABLE experience (
   id INT PRIMARY KEY AUTO_INCREMENT,
@@ -159,6 +219,9 @@ CREATE TABLE contact_info (
   id INT PRIMARY KEY,
   availability_badge VARCHAR(255),
   availability_badge_en VARCHAR(255),
+  -- Color del LED de disponibilidad de Contacto (hex #RRGGBB), independiente
+  -- del texto — mismo criterio que hero.avail_color (NULL = verde por defecto).
+  availability_badge_color VARCHAR(20) NULL,
   -- URL del propio portafolio (se muestra en la barra de contacto del CV,
   -- ver src/Cv.php). No es traducible (es una URL) y se edita desde el
   -- dashboard (pestaña CV) en vez de quedar fija en el código: antes de tener
@@ -175,7 +238,8 @@ CREATE TABLE contacts (
   label VARCHAR(80) NOT NULL,
   label_en VARCHAR(80) NULL,
   value VARCHAR(255) NOT NULL,
-  sort_order INT NOT NULL DEFAULT 0
+  sort_order INT NOT NULL DEFAULT 0,
+  INDEX idx_sort (sort_order, id)
 ) ENGINE=InnoDB;
 
 -- Links de redes/plataformas externas del dashboard (Inicio > "Redes
@@ -187,7 +251,8 @@ CREATE TABLE social_links (
   id INT PRIMARY KEY AUTO_INCREMENT,
   url VARCHAR(500) NOT NULL,
   sort_order INT NOT NULL DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_sort (sort_order, id)
 ) ENGINE=InnoDB;
 
 -- Único usuario administrador del dashboard.

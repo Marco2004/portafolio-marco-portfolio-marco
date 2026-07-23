@@ -27,7 +27,19 @@
     compress: svg('<path d="M4 9h5V4M20 9h-5V4M4 15h5v5M20 15h-5v5"/>', {}),
     chevronLeft: svg('<path d="M15 5 8 12l7 7"/>', {}),
     chevronRight: svg('<path d="M9 5l7 7-7 7"/>', {}),
+    chevronDown: svg('<path d="M5 9l7 7 7-7"/>', {}),
+    // Flecha circular antihoraria de "deshacer/volver al valor automático"
+    // (mismo glifo que Feather "rotate-ccw", muy reconocible) — evita el "✕"
+    // que se leía como "eliminar" en vez de "regresar a como estaba por
+    // defecto". El primer intento (un arco corto con una esquina suelta) no
+    // se leía como nada reconocible; este cierra casi todo el círculo y
+    // termina en una punta de flecha clara.
+    revert: svg('<path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>', {}),
     sun: svg('<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/>', {}),
     moon: svg('<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/>', {}),
+    // Triángulo de aviso — usado cuando un nivel de habilidad se eliminó de
+    // la lista de definiciones (ver skillLevelOptionsHtml() en
+    // admin-forms.js) y una habilidad se quedó con ese texto "huérfano".
+    warning: svg('<path d="M12 3.5 21.5 20h-19L12 3.5Z"/><path d="M12 9.5v5"/><circle cx="12" cy="17.3" r=".9" fill="currentColor" stroke="none"/>', {}),
   };
 })();

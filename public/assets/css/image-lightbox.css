@@ -1,0 +1,83 @@
+/* Ventana emergente al hacer clic en la imagen de un proyecto (insignia o
+   tarjeta normal) — ver public/assets/js/image-lightbox.js. Misma curva de
+   entrada que el resto del sitio usa para sus animaciones de aparición
+   (--ease-reveal/--duration-reveal, las mismas que .flagship/.project-card
+   con [data-reveal] al hacer scroll), para que se sienta parte de la misma
+   identidad visual en vez de un componente aparte. */
+
+.flagship__image,
+.project-card__image {
+  cursor: zoom-in;
+}
+
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  background: rgba(3, 7, 18, 0);
+  transition: background-color var(--duration-base) ease, backdrop-filter var(--duration-base) ease;
+}
+.image-lightbox[hidden] {
+  display: none;
+}
+.image-lightbox.is-open {
+  background: rgba(3, 7, 18, .82);
+  /* En el tema oscuro del sitio, un fondo oscuro semitransparente encima de
+     un fondo YA oscuro (--bg) prácticamente no se nota — el difuminado es lo
+     que de verdad separa la página de atrás de la imagen, sin importar qué
+     tan parecido sea el tono de ambos fondos. */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.image-lightbox__img {
+  max-width: min(1200px, 92vw);
+  max-height: 86vh;
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .5);
+  opacity: 0;
+  transform: scale(.94);
+  transition: opacity var(--duration-reveal) var(--ease-reveal), transform var(--duration-reveal) var(--ease-reveal);
+}
+.image-lightbox.is-open .image-lightbox__img {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.image-lightbox__close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  background: rgba(13, 17, 23, .55);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity var(--duration-reveal) var(--ease-reveal), transform var(--duration-reveal) var(--ease-reveal), background-color var(--duration-fast) ease;
+}
+.image-lightbox.is-open .image-lightbox__close {
+  opacity: 1;
+  transform: translateY(0);
+}
+.image-lightbox__close:hover {
+  background: rgba(255, 255, 255, .15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-lightbox,
+  .image-lightbox__img,
+  .image-lightbox__close {
+    transition: none;
+  }
+}

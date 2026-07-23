@@ -19,15 +19,6 @@
   var root = document.documentElement;
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var FADE_MS = 200;
-  // 1000ms — debe coincidir con --duration-theme en admin-base.css. Mientras
-  // dura, .theme-transitioning hace que TODO lo que cambia de color por el
-  // tema se anime a esta misma velocidad (ver el mismo mecanismo en
-  // theme.js/admin-sections.js) — incluido el fondo con degradado de
-  // .login-screen (--auth-bg) y el propio botón de tema, que sin esto fundía
-  // a su ritmo corto de hover (--duration-fast) mientras el fondo de la
-  // pantalla, sin transición propia, cambiaba de golpe.
-  var THEME_TRANSITION_MS = 1000;
-  var themeTransitionTimer = null;
 
   function currentMode() {
     return root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
@@ -67,13 +58,6 @@
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var next = currentMode() === 'dark' ? 'light' : 'dark';
-        if (!reduceMotion) {
-          root.classList.add('theme-transitioning');
-          clearTimeout(themeTransitionTimer);
-          themeTransitionTimer = setTimeout(function () {
-            root.classList.remove('theme-transitioning');
-          }, THEME_TRANSITION_MS);
-        }
         root.setAttribute('data-theme', next);
         try { localStorage.setItem(STORAGE_KEY, next); } catch (e) {}
         update(true);

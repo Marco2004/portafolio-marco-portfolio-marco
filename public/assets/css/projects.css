@@ -4,6 +4,17 @@
   overflow: hidden;
   background: var(--panel);
   margin-bottom: 26px;
+  /* Mismo trato que .project-card (abajo): antes solo los proyectos
+     normales reaccionaban al pasar el mouse (se levantaban un poco y el
+     borde se iluminaba) — el insignia se quedaba completamente estático al
+     lado de ellos, una inconsistencia notoria siendo la tarjeta más
+     prominente de la sección. */
+  transition: transform var(--duration-base) ease, border-color var(--duration-base) ease, box-shadow var(--duration-base) ease;
+}
+.flagship:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
 }
 
 .flagship__bar {
@@ -128,11 +139,12 @@
   background: var(--panel);
   display: flex;
   flex-direction: column;
-  transition: transform var(--duration-base) ease, border-color var(--duration-base) ease;
+  transition: transform var(--duration-base) ease, border-color var(--duration-base) ease, box-shadow var(--duration-base) ease;
 }
 .project-card:hover {
   transform: translateY(-3px);
   border-color: var(--accent);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
 }
 
 .project-card__browser {

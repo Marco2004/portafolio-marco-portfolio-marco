@@ -31,9 +31,6 @@
   --duration-base: .2s;
   --duration-panel: .28s;
   --duration-reveal: .5s;
-  /* Mismo fundido de tema que public/assets/css/variables.css — ver esa
-     hoja para la explicación completa. */
-  --duration-theme: 1s;
 
   /* Fondo de las pantallas de auth (login/setup/forgot-password/etc.) — antes
      estaba fijo en admin-login.css sin variable, por lo que nunca cambiaba
@@ -80,6 +77,12 @@
 html {
   scrollbar-color: var(--border-2) var(--bg-2);
   scrollbar-width: thin;
+  /* Mismo criterio que public/assets/css/base.css: evita un scroll
+     horizontal fantasma en móvil — confirmado con Playwright en 375/390px,
+     causado por el drawer del sidebar (transform: translateX(-100%) cuando
+     está cerrado, ver admin-responsive.css) contando hacia el ancho
+     desplazable aunque no se vea nada cortado en pantalla. */
+  overflow-x: hidden;
 }
 
 *::-webkit-scrollbar {
@@ -108,31 +111,6 @@ body {
   font-family: var(--font-sans);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-}
-
-/* Misma clase/mecanismo que public/assets/css/base.css: al alternar tema
-   (dashboard o páginas de auth), el JS correspondiente (admin-sections.js,
-   auth-theme-toggle.js) pone esta clase en <html> durante --duration-theme
-   para que TODO lo que cambia de color por el tema (incluido el fondo con
-   degradado --auth-bg de las pantallas de auth, ver admin-login.css) se
-   anime a la misma velocidad y con la misma curva --ease-reveal, en vez de
-   que cada elemento use la duración corta que ya tuviera declarada para SU
-   PROPIA transición de hover/foco (--duration-fast) — sin este !important,
-   el botón de tema o los inputs fundían a su propio ritmo de hover mientras
-   el fondo de la pantalla (que no tenía transición propia) cambiaba de
-   golpe. Se anima "background" completo (no solo background-color) porque
-   un degradado se fija como background-image, no background-color. Se
-   quita sola al terminar para no frenar las transiciones normales de hover
-   el resto del tiempo. */
-.theme-transitioning,
-.theme-transitioning * {
-  transition: background var(--duration-theme) var(--ease-reveal), color var(--duration-theme) var(--ease-reveal), border-color var(--duration-theme) var(--ease-reveal), fill var(--duration-theme) var(--ease-reveal) !important;
-}
-@media (prefers-reduced-motion: reduce) {
-  .theme-transitioning,
-  .theme-transitioning * {
-    transition: none !important;
-  }
 }
 
 /* Mismo look que el switch de tema del portafolio público (.nav__icon-btn en

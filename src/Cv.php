@@ -126,8 +126,8 @@ function render_cv_html(array $data, string $lang, array $i18n): string {
             $langLinesEn = t_list($education['languages'], $education['languagesEn'], 'en');
         ?>
         <?php foreach ($education['languages'] as $i => $langLine):
-            [$langName, $langDesc] = array_pad(array_map('trim', explode('—', $langLine, 2)), 2, '');
-            [$langNameEn, $langDescEn] = array_pad(array_map('trim', explode('—', $langLinesEn[$i] ?? $langLine, 2)), 2, '');
+            [$langName, $langDesc] = split_lang_line($langLine);
+            [$langNameEn, $langDescEn] = split_lang_line($langLinesEn[$i] ?? $langLine);
             $visibleName = $lang === 'en' ? $langNameEn : $langName;
             $visibleDesc = $lang === 'en' ? $langDescEn : $langDesc;
         ?>

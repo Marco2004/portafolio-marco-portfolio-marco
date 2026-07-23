@@ -19,6 +19,16 @@
     flex-wrap: wrap;
   }
 
+  /* .topbar ya envuelve el título y las acciones en renglones separados,
+     pero .topbar__actions en sí (tema, idioma, vista previa, guardar) seguía
+     siendo una sola fila sin flex-wrap — con las 4 juntas no cabían ni
+     siquiera en su propio renglón en 375/390px (confirmado con Playwright:
+     el botón "English" quedaba fuera de la pantalla, sin forma de
+     alcanzarlo). */
+  .topbar__actions {
+    flex-wrap: wrap;
+  }
+
   .edit-lang-toggle {
     order: 3;
   }
@@ -87,9 +97,58 @@
   }
 }
 
+@media (max-width: 1000px) {
+  /* La vista previa en vivo no cabe con comodidad debajo de 1000px — se
+     oculta el panel junto con el botón que lo abre, para no ofrecer un
+     control que no hace nada visible en esta resolución. (Movido aquí desde
+     admin-layout.css: antes era un tercer breakpoint suelto en otro
+     archivo, aparte de los 900px/560px de este mismo archivo.) */
+  .preview-column {
+    display: none;
+  }
+  [data-preview-toggle] {
+    display: none;
+  }
+}
+
 @media (max-width: 560px) {
   .repeat-card__head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  /* Las filas de Habilidades/Experiencia/Educación/Certificaciones/Contactos/
+     Botones (.mini-row y variantes) son un grid de 3-5 columnas fijas — por
+     debajo de ~560px ya no caben ni los textos ni los controles sin
+     amontonarse o desbordar. Se apilan en una sola columna: cada campo pasa
+     a ocupar el ancho completo, en el mismo orden en que ya estaban en el
+     HTML (grip, campos de texto, extras, quitar). */
+  .mini-row,
+  .mini-row--dated,
+  .mini-row--skill,
+  .mini-row--button {
+    grid-template-columns: 1fr;
+  }
+  .mini-row--dated .datepicker {
+    min-width: 0;
+  }
+
+  /* Objetivos táctiles: varios controles icon-only del dashboard rondan los
+     20-26px, por debajo de las ~44px recomendadas para dedo en pantallas
+     táctiles. Se agranda solo el área de toque (padding/min-*) en esta
+     resolución, sin tocar el tamaño del ícono ni la apariencia en
+     escritorio (donde se usa mouse, no dedo, y el diseño actual ya se
+     revisó ahí). */
+  .mini-remove,
+  .combo__toggle,
+  .combo__option-delete,
+  .color-swatch__reset,
+  .repeat-card__toggle {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .drag-handle {
+    min-width: 40px;
+    min-height: 40px;
   }
 }

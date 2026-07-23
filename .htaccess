@@ -57,6 +57,36 @@ Options -Indexes
     </IfModule>
 </FilesMatch>
 
+# Comprime la respuesta antes de mandarla (HTML/CSS/JS/JSON/SVG) — más
+# rápido de descargar sin cambiar ni un byte del contenido real, el
+# navegador la descomprime solo. Si el hosting no trae mod_deflate, este
+# bloque simplemente no hace nada (sin -Indexes, sin romper nada).
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+# Caché de un año para CSS/JS/imágenes/fuentes — seguro porque nunca se
+# sirven "en frío": el CSS/JS local siempre se pide con "?v=<fecha de
+# modificación>" (ver asset_url() en src/helpers.php), así que un cambio de
+# archivo cambia la URL y el navegador pide la versión nueva sin esperar a
+# que expire nada; las imágenes que sube el admin (public/uploads/projects/)
+# se guardan con un nombre aleatorio nuevo en cada subida (nunca se
+# sobreescribe uno existente, ver save_uploaded_file() en helpers.php), así
+# que tampoco hay riesgo de servir una versión vieja bajo la misma URL. Las
+# páginas PHP (público, dashboard, API) no están en esta lista — esas sí
+# cambian de contenido bajo la misma URL en cada visita/guardado.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    <FilesMatch "\.(css|js|png|jpe?g|gif|svg|ico|webp|woff2?|ttf)$">
+        ExpiresDefault "access plus 1 year"
+    </FilesMatch>
+</IfModule>
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|png|jpe?g|gif|svg|ico|webp|woff2?|ttf)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "SAMEORIGIN"

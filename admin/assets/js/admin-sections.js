@@ -22,12 +22,38 @@
       el.hidden = el.getAttribute('data-section-panel') !== name;
     });
     document.querySelectorAll('[data-section-btn]').forEach(function (btn) {
-      btn.classList.toggle('is-active', btn.getAttribute('data-section-btn') === name);
+      var isActive = btn.getAttribute('data-section-btn') === name;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
     var meta = SECTION_META[name] || ['', ''];
     document.querySelector('[data-section-title]').textContent = meta[0] ? t(meta[0]) : '';
     document.querySelector('[data-section-subtitle]').textContent = meta[1] ? t(meta[1]) : '';
+
+    // El contenedor de las 7 secciones es el mismo (solo se esconde/muestra
+    // cuál panel se ve, no se reconstruye) — sin esto, cambiar de sección
+    // conservaba el scroll que traía la anterior, así que entrar a "Inicio"
+    // desde más abajo en otra sección podía aterrizar a media página, con el
+    // aviso de idioma y el título de la sección ya recortados por arriba en
+    // vez de empezar limpio. .form-column tiene overflow-y:auto en la hoja
+    // de estilos, pero .admin-shell solo pone min-height:100vh (no
+    // height/max-height), así que en la práctica es la ventana la que
+    // termina desplazándose, no ese contenedor — se resetean los dos para
+    // cubrir cualquiera de las dos formas en que el navegador decida
+    // desplazar el contenido.
+    // El "scroll anchoring" del navegador (pensado para no saltar la vista
+    // cuando cambia el contenido arriba) puede corregir un scrollTop=0
+    // puesto aquí mismo apenas un instante después, en cuanto termina de
+    // aplicarse el cambio real de qué panel está oculto — por eso se repite
+    // en el siguiente frame, después de que ese reflow ya pasó.
+    var formColumn = document.querySelector('.form-column');
+    if (formColumn) formColumn.scrollTop = 0;
+    window.scrollTo(0, 0);
+    requestAnimationFrame(function () {
+      if (formColumn) formColumn.scrollTop = 0;
+      window.scrollTo(0, 0);
+    });
 
     window.MPVAdmin.notifyChange();
     document.dispatchEvent(new CustomEvent('mpv-admin:closedrawer'));
@@ -54,6 +80,12 @@
       bannerAfter.textContent = t('admin.editLangBanner.after').replace('%LANG%', langName);
     }
   }
+
+  // Expuesta para que otros módulos puedan saltar a una sección a mano —
+  // p. ej. admin-save.js, para llevar al admin directo a la fila con un
+  // error de validación (nivel de habilidad eliminado) antes de guardar.
+  window.MPVAdmin = window.MPVAdmin || {};
+  window.MPVAdmin.showSection = showSection;
 
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-section-btn]').forEach(function (btn) {
@@ -166,29 +198,16 @@
 
     window.MPVAdmin.theme = currentDashboardTheme();
 
-    // 1000ms — debe coincidir con --duration-theme en admin-base.css.
-    // Mientras dura, .theme-transitioning (ver admin-base.css) hace que TODO
-    // lo que cambia de color por el tema se anime a esta misma velocidad, en
-    // vez de que cada elemento use la duración de su propia transición de
-    // hover/foco (o ninguna).
-    var THEME_TRANSITION_MS = 1000;
-    var themeTransitionTimer = null;
-
+    // Cambio de tema instantáneo (data-theme se aplica directo, sin cross-fade
+    // de colores) — mismo criterio que el sitio público, ver theme.js.
     if (themeToggleBtn) {
       themeToggleBtn.addEventListener('click', function () {
         var next = currentDashboardTheme() === 'light' ? 'dark' : 'light';
-        if (!reduceMotion) {
-          document.documentElement.classList.add('theme-transitioning');
-          clearTimeout(themeTransitionTimer);
-          themeTransitionTimer = setTimeout(function () {
-            document.documentElement.classList.remove('theme-transitioning');
-          }, THEME_TRANSITION_MS);
-        }
         document.documentElement.setAttribute('data-theme', next);
         try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
         updateThemeToggleIcon(true);
         window.MPVAdmin.theme = next;
-        window.MPVAdmin.notifyChange();
+        window.MPVAdmin.notifyChange(true);
       });
       updateThemeToggleIcon(false);
     }

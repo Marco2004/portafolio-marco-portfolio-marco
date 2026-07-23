@@ -18,21 +18,26 @@
  * preferencia guardada de tu propio navegador para el sitio real.
  */
 (function () {
-  function escapeHtml(s) {
-    return (s || '').replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-  var escapeAttr = escapeHtml;
+  // Definidas una sola vez en admin-escape.js (window.MPVEscape), cargado
+  // antes que este archivo — ver ese archivo para el porqué.
+  var escapeHtml = window.MPVEscape.html;
+  var escapeAttr = window.MPVEscape.attr;
 
+  // Fallback bidireccional (igual que t() en src/helpers.php): si el idioma
+  // activo no tiene texto, se usa el del otro en vez de dejarlo vacío — antes
+  // solo caía ES→EN, nunca al revés (Ficha rápida/Habilidades creadas
+  // primero en inglés se veían vacías al cambiar a español).
   function fallbackEn(es, en) {
     return (en && String(en).trim() !== '') ? en : (es || '');
   }
+  function fallbackEs(es, en) {
+    return (es && String(es).trim() !== '') ? es : (en || '');
+  }
   function pick(es, en, lang) {
-    return lang === 'en' ? fallbackEn(es, en) : (es || '');
+    return lang === 'en' ? fallbackEn(es, en) : fallbackEs(es, en);
   }
   function dynAttrs(es, en) {
-    return ' data-i18n-dynamic data-es="' + escapeAttr(es || '') + '" data-en="' + escapeAttr(fallbackEn(es, en)) + '"';
+    return ' data-i18n-dynamic data-es="' + escapeAttr(fallbackEs(es, en)) + '" data-en="' + escapeAttr(fallbackEn(es, en)) + '"';
   }
   function safeUrl(url) {
     url = (url || '').trim();
@@ -58,15 +63,47 @@
     var slug = (title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     return slug || 'proyecto';
   }
+  // Mismos dos helpers que dot_color_style()/skill_level_pill_style() en
+  // src/helpers.php — ver ese archivo para la explicación completa (hex+alpha
+  // replicando el halo/borde suave que antes solo existía como CSS fijo).
+  function dotColorStyle(hex) {
+    return hex ? ('background:' + hex + '; box-shadow:0 0 0 4px ' + hex + '38;') : '';
+  }
+  // Igual que badge_color_style() en src/helpers.php: el fondo/borde de toda
+  // la insignia de disponibilidad de Contacto, no solo el punto — antes se
+  // quedaban fijos en verde sin importar qué color se eligiera para el LED.
+  function badgeColorStyle(hex) {
+    return hex ? ('background:' + hex + '1F; border-color:' + hex + '59;') : '';
+  }
+  function skillLevelPillStyle(hex) {
+    return hex ? (' style="color:' + hex + '; border-color:' + hex + '59;"') : '';
+  }
   // Misma regla que skill_level_pill_class() en src/helpers.php — se evalúa
   // siempre sobre el texto en español, igual que hace el sitio real (así el
   // color del nivel no cambia al alternar el idioma de vista previa).
   function skillLevelPillClass(levelEs) {
     var l = (levelEs || '').toLowerCase();
-    if (l.indexOf('intermedio') !== -1 || l.indexOf('avanzado') !== -1) return 'level-pill--green';
+    if (l.indexOf('avanzado') !== -1) return 'level-pill--green';
+    if (l.indexOf('intermedio') !== -1) return 'level-pill--accent';
     if (l.indexOf('básico') !== -1 || l.indexOf('basico') !== -1) return 'level-pill--amber';
+    if (l.indexOf('herramienta') !== -1) return 'level-pill--purple';
+    if (l.indexOf('sistema') !== -1) return 'level-pill--teal';
     return 'level-pill--neutral';
   }
+  // Empareja dos listas ES/EN por índice hasta la más larga de las dos —
+  // mismo criterio que t_list() en src/helpers.php (fallback bidireccional):
+  // antes se iteraba solo sobre la lista en español, así que una lista
+  // creada primero en inglés (con la española todavía vacía) no mostraba
+  // nada en la vista previa aunque sí hubiera contenido en inglés.
+  function zipLines(esArr, enArr) {
+    var len = Math.max(esArr.length, enArr.length);
+    var out = [];
+    for (var i = 0; i < len; i++) {
+      out.push({ es: esArr[i] || '', en: enArr[i] || '' });
+    }
+    return out;
+  }
+
   function splitEmDash(line) {
     var parts = (line || '').split('—');
     return [(parts[0] || '').trim(), (parts[1] || '').trim()];
@@ -74,10 +111,22 @@
 
   /* ---------- plantillas (mismas clases que public/index.php) ---------- */
 
+  // Botones del CTA de un proyecto — cantidad libre (punto 13), primary→
+  // btn-accent / secondary→btn-outline, mismas clases que ya existían para
+  // Demo/Código (ahora desacopladas de esos 2 roles fijos).
+  function projectButtonsHtml(buttons, lang) {
+    return (buttons || []).map(function (btn) {
+      var url = safeUrl(btn.url);
+      if (!url) return '';
+      var cls = btn.style === 'primary' ? 'btn-accent' : 'btn-outline';
+      return '<a href="' + escapeAttr(url) + '" target="_blank" rel="noopener" class="btn ' + cls + '"' + dynAttrs(btn.label, btn.labelEn) + '>' + escapeHtml(pick(btn.label, btn.labelEn, lang)) + '</a>';
+    }).join('');
+  }
+
   function flagshipHtml(p, index, i18n, lang, stackList) {
     var imageHtml = p.image
       ? '<img class="flagship__image" src="uploads/projects/' + escapeAttr(p.image) + '" alt="' + escapeAttr(p.title) + '">'
-      : '<div class="flagship__image image-drop"><div class="image-drop__placeholder">Sin captura todavía</div></div>';
+      : '<div class="flagship__image image-drop"><div class="image-drop__placeholder">' + escapeHtml(i18n['hero.imagePlaceholder']) + '</div></div>';
     var chips = stackList.map(function (t) { return '<span class="chip">' + escapeHtml(t) + '</span>'; }).join('');
     var stats = [1, 2, 3].map(function (n) {
       var v = p['stat' + n + 'Value'];
@@ -85,8 +134,7 @@
       var l = p['stat' + n + 'Label'], lEn = p['stat' + n + 'LabelEn'];
       return '<div><p class="flagship__stat-value">' + escapeHtml(v) + '</p><p class="flagship__stat-label"' + dynAttrs(l, lEn) + '>' + escapeHtml(pick(l, lEn, lang)) + '</p></div>';
     }).join('');
-    var demoBtn = p.demoUrl ? '<a href="' + escapeAttr(safeUrl(p.demoUrl)) + '" target="_blank" rel="noopener" class="btn btn-accent">' + escapeHtml(i18n['cta.demo']) + '</a>' : '';
-    var codeBtn = p.codeUrl ? '<a href="' + escapeAttr(safeUrl(p.codeUrl)) + '" target="_blank" rel="noopener" class="btn btn-outline">' + escapeHtml(i18n['cta.code']) + '</a>' : '';
+    var ctaHtml = projectButtonsHtml(p.buttons, lang);
     return '' +
       '<article class="flagship" data-reveal data-preview-target="projects" data-preview-index="' + index + '">' +
         '<div class="flagship__bar"><span class="flagship__bar-label">' + escapeHtml(i18n['fp.kick']) + '</span></div>' +
@@ -104,7 +152,7 @@
               '<div><p class="flagship__narrative-label">' + escapeHtml(i18n['fp.result.l']) + '</p><p class="flagship__narrative-text"' + dynAttrs(p.result, p.resultEn) + '>' + escapeHtml(pick(p.result, p.resultEn, lang)) + '</p></div>' +
             '</div>' +
             (stats ? '<div class="flagship__stats">' + stats + '</div>' : '') +
-            '<div class="flagship__cta">' + demoBtn + codeBtn + '</div>' +
+            '<div class="flagship__cta">' + ctaHtml + '</div>' +
           '</div>' +
         '</div>' +
       '</article>';
@@ -113,10 +161,9 @@
   function projectCardHtml(p, index, i18n, lang, stackList) {
     var imageHtml = p.image
       ? '<img class="project-card__image" src="uploads/projects/' + escapeAttr(p.image) + '" alt="' + escapeAttr(p.title) + '">'
-      : '<div class="project-card__image image-drop"><div class="image-drop__placeholder">Sin captura todavía</div></div>';
+      : '<div class="project-card__image image-drop"><div class="image-drop__placeholder">' + escapeHtml(i18n['hero.imagePlaceholder']) + '</div></div>';
     var chips = stackList.map(function (t) { return '<span class="chip">' + escapeHtml(t) + '</span>'; }).join('');
-    var demoBtn = p.demoUrl ? '<a href="' + escapeAttr(safeUrl(p.demoUrl)) + '" target="_blank" rel="noopener" class="btn btn-accent">' + escapeHtml(i18n['cta.demo']) + '</a>' : '';
-    var codeBtn = p.codeUrl ? '<a href="' + escapeAttr(safeUrl(p.codeUrl)) + '" target="_blank" rel="noopener" class="btn btn-outline">' + escapeHtml(i18n['cta.code']) + '</a>' : '';
+    var ctaHtml = projectButtonsHtml(p.buttons, lang);
     return '' +
       '<article class="project-card" data-reveal data-preview-target="projects" data-preview-index="' + index + '">' +
         '<div class="project-card__browser">' +
@@ -129,7 +176,7 @@
           '<p class="project-card__text"><strong>' + escapeHtml(i18n['proj.mine.l']) + '</strong> <span' + dynAttrs(p.mine, p.mineEn) + '>' + escapeHtml(pick(p.mine, p.mineEn, lang)) + '</span></p>' +
           '<p class="project-card__impact"><span class="project-card__impact-label">' + escapeHtml(i18n['imp.label']) + '</span><span' + dynAttrs(p.impact, p.impactEn) + '>' + escapeHtml(pick(p.impact, p.impactEn, lang)) + '</span></p>' +
           '<div class="project-card__stack">' + chips + '</div>' +
-          '<div class="project-card__cta">' + demoBtn + codeBtn + '</div>' +
+          '<div class="project-card__cta">' + ctaHtml + '</div>' +
         '</div>' +
       '</article>';
   }
@@ -137,7 +184,7 @@
   function skillsGridHtml(skills, lang) {
     return skills.map(function (cat, ci) {
       var rows = cat.items.map(function (s) {
-        return '<div class="skill-row"><span class="skill-row__name">' + escapeHtml(s.name) + '</span><span class="level-pill ' + skillLevelPillClass(s.level) + '"' + dynAttrs(s.level, s.levelEn) + '>' + escapeHtml(pick(s.level, s.levelEn, lang)) + '</span></div>';
+        return '<div class="skill-row"><span class="skill-row__name">' + escapeHtml(s.name) + '</span><span class="level-pill ' + skillLevelPillClass(s.level) + '"' + skillLevelPillStyle(s.levelColor) + dynAttrs(s.level, s.levelEn) + '>' + escapeHtml(pick(s.level, s.levelEn, lang)) + '</span></div>';
       }).join('');
       return '<div class="skill-card" data-reveal data-preview-target="skills" data-preview-index="' + ci + '"><p class="skill-card__title"' + dynAttrs(cat.name, cat.nameEn) + '>' + escapeHtml(pick(cat.name, cat.nameEn, lang)) + '</p><div class="skill-card__list">' + rows + '</div></div>';
     }).join('');
@@ -145,20 +192,27 @@
 
   function experienceHtml(experience, lang, utils) {
     return experience.map(function (x, i) {
-      var bulletsEs = utils.splitLines(x.bulletsStr);
-      var bulletsEnArr = utils.splitLines(x.bulletsEnStr);
-      var metricsEs = utils.splitCsv(x.metricsStr);
-      var metricsEnArr = utils.splitCsv(x.metricsEnStr);
-      var bullets = bulletsEs.map(function (b, bi) {
-        return '<li' + dynAttrs(b, bulletsEnArr[bi]) + '>' + escapeHtml(pick(b, bulletsEnArr[bi], lang)) + '</li>';
+      var bullets = zipLines(utils.splitLines(x.bulletsStr), utils.splitLines(x.bulletsEnStr)).map(function (line) {
+        return '<li' + dynAttrs(line.es, line.en) + '>' + escapeHtml(pick(line.es, line.en, lang)) + '</li>';
       }).join('');
-      var metrics = metricsEs.map(function (m, mi) {
-        return '<span class="metric-pill"' + dynAttrs(m, metricsEnArr[mi]) + '>' + escapeHtml(pick(m, metricsEnArr[mi], lang)) + '</span>';
+      var metrics = zipLines(utils.splitCsv(x.metricsStr), utils.splitCsv(x.metricsEnStr)).map(function (line) {
+        return '<span class="metric-pill"' + dynAttrs(line.es, line.en) + '>' + escapeHtml(pick(line.es, line.en, lang)) + '</span>';
       }).join('');
       var dateText = window.MPVDatepicker.formatDateRange(x.startDate, x.isCurrent ? null : x.endDate, lang);
+      var durationText = window.MPVDatepicker.formatDuration(x.startDate, x.isCurrent ? null : x.endDate, lang);
+      // MISMA estructura que el bloque de Experiencia en public/index.php —
+      // .timeline-item es un grid de exactamente 2 columnas (200px 1fr), así
+      // que fecha+duración van SIEMPRE agrupadas en un solo div (la primera
+      // columna); agregarlas como hijos sueltos rompe el grid entero (le
+      // toca a este <div> ajeno la 2da columna y el contenido real —rol,
+      // organización, viñetas— se cae a una 3ra fila de solo 200px). Si se
+      // toca esta plantilla, hay que tocar la de allá también — y viceversa.
       return '' +
         '<div class="timeline-item" data-reveal data-preview-target="experience" data-preview-index="' + i + '">' +
-          '<p class="timeline-item__date">' + escapeHtml(dateText) + '</p>' +
+          '<div class="timeline-item__dates">' +
+            '<p class="timeline-item__date">' + escapeHtml(dateText) + '</p>' +
+            (durationText ? '<p class="timeline-item__duration">' + escapeHtml(durationText) + '</p>' : '') +
+          '</div>' +
           '<div>' +
             '<h3 class="timeline-item__role"' + dynAttrs(x.role, x.roleEn) + '>' + escapeHtml(pick(x.role, x.roleEn, lang)) + '</h3>' +
             '<p class="timeline-item__org"' + dynAttrs(x.org, x.orgEn) + '>' + escapeHtml(pick(x.org, x.orgEn, lang)) + '</p>' +
@@ -187,15 +241,12 @@
   }
 
   function langListHtml(edu, lang, utils, labelText) {
-    var linesEs = utils.splitLines(edu.languagesStr);
-    var linesEnArr = utils.splitLines(edu.languagesEnStr);
-    var items = linesEs.map(function (line, i) {
-      var lineEn = linesEnArr[i] || line;
-      var esParts = splitEmDash(line);
-      var enParts = splitEmDash(lineEn);
+    var items = zipLines(utils.splitLines(edu.languagesStr), utils.splitLines(edu.languagesEnStr)).map(function (line) {
+      var esParts = splitEmDash(line.es || line.en);
+      var enParts = splitEmDash(line.en || line.es);
       var nameVisible = pick(esParts[0], enParts[0], lang);
-      var descEs = '— ' + esParts[1];
-      var descEn = '— ' + (enParts[1] || esParts[1]);
+      var descEs = '— ' + (esParts[1] || '');
+      var descEn = '— ' + (enParts[1] || esParts[1] || '');
       var descVisible = lang === 'en' ? descEn : descEs;
       return '<p class="lang-list__item"><strong' + dynAttrs(esParts[0], enParts[0]) + '>' + escapeHtml(nameVisible) + '</strong> <span data-i18n-dynamic data-es="' + escapeAttr(descEs) + '" data-en="' + escapeAttr(descEn) + '">' + escapeHtml(descVisible) + '</span></p>';
     }).join('');
@@ -219,12 +270,14 @@
     var setDyn = function (selector, es, en) {
       var el = doc.querySelector(selector);
       if (!el) return;
-      el.setAttribute('data-es', es || '');
+      el.setAttribute('data-es', fallbackEs(es, en));
       el.setAttribute('data-en', fallbackEn(es, en));
       el.textContent = pick(es, en, lang);
     };
     var title = doc.querySelector('.hero__title');
     if (title) title.textContent = h.name || '';
+    var badgeDot = doc.querySelector('.hero__badge-dot');
+    if (badgeDot) badgeDot.setAttribute('style', dotColorStyle(h.availColor));
     setDyn('.hero__badge span[data-i18n-dynamic]', h.avail, h.availEn);
     setDyn('.hero__role', h.role, h.roleEn);
     setDyn('.hero__desc', h.desc, h.descEn);
@@ -242,12 +295,12 @@
     // propio typewriter.js del iframe) lo vuelve a dibujar ahora mismo.
     var typewriter = doc.querySelector('.hero__code-pre[data-typewriter]');
     if (typewriter) {
-      typewriter.setAttribute('data-role-es', h.role || '');
+      typewriter.setAttribute('data-role-es', fallbackEs(h.role, h.roleEn));
       typewriter.setAttribute('data-role-en', fallbackEn(h.role, h.roleEn));
-      typewriter.setAttribute('data-availability-es', h.avail || '');
+      typewriter.setAttribute('data-availability-es', fallbackEs(h.avail, h.availEn));
       typewriter.setAttribute('data-availability-en', fallbackEn(h.avail, h.availEn));
       typewriter.setAttribute('data-facts-es', JSON.stringify(state.heroFacts.map(function (f) {
-        return { label: f.label || '', value: f.value || '' };
+        return { label: fallbackEs(f.label, f.labelEn), value: fallbackEs(f.value, f.valueEn) };
       })));
       typewriter.setAttribute('data-facts-en', JSON.stringify(state.heroFacts.map(function (f) {
         return { label: fallbackEn(f.label, f.labelEn), value: fallbackEn(f.value, f.valueEn) };
@@ -306,9 +359,13 @@
     // Insignia de disponibilidad + tarjeta de contacto.
     var badge = doc.querySelector('.availability-badge__text[data-i18n-dynamic]');
     if (badge) {
-      badge.setAttribute('data-es', c.badge || '');
+      badge.setAttribute('data-es', fallbackEs(c.badge, c.badgeEn));
       badge.setAttribute('data-en', fallbackEn(c.badge, c.badgeEn));
     }
+    var badgeDot = doc.querySelector('.availability-badge__dot');
+    if (badgeDot) badgeDot.setAttribute('style', dotColorStyle(c.badgeColor));
+    var badgeWrap = doc.querySelector('.availability-badge');
+    if (badgeWrap) badgeWrap.setAttribute('style', badgeColorStyle(c.badgeColor));
 
     // Contacto ya no repite los links de redes sociales de Inicio (punto 10)
     // — es su propia lista independiente; si el admin quiere una red social
@@ -341,15 +398,6 @@
 
   /* ---------- orquestación ---------- */
 
-  // 1000ms — debe coincidir con --duration-theme (ver public/assets/css/
-  // variables.css). fullSync() fuerza el data-theme del iframe directamente
-  // (ver más abajo); sin agregar esta misma clase ahí, el resto de las cajas
-  // de la vista previa (hero__fact, project-card, nav__link, botones...) que
-  // dependen de .theme-transitioning para animar cualquier color no tenían
-  // esa clase disponible dentro del iframe y cambiaban de golpe.
-  var PREVIEW_THEME_TRANSITION_MS = 1000;
-  var previewThemeTransitionTimer = null;
-
   function fullSync(iframe, state, i18nDict, lang) {
     var doc = iframe.contentDocument;
     var win = iframe.contentWindow;
@@ -362,17 +410,6 @@
     // dashboard (window.MPVAdmin.theme, ver admin-sections.js), no un valor
     // de BD por visitante (eso ya no existe).
     var dashboardTheme = window.MPVAdmin.theme === 'light' ? 'light' : 'dark';
-    var prevTheme = doc.documentElement.getAttribute('data-theme');
-    if (prevTheme !== dashboardTheme) {
-      var reduceMotion = win.matchMedia && win.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!reduceMotion) {
-        doc.documentElement.classList.add('theme-transitioning');
-        clearTimeout(previewThemeTransitionTimer);
-        previewThemeTransitionTimer = setTimeout(function () {
-          doc.documentElement.classList.remove('theme-transitioning');
-        }, PREVIEW_THEME_TRANSITION_MS);
-      }
-    }
     doc.documentElement.setAttribute('data-theme', dashboardTheme);
     // La etiqueta visible del botón de tema la controla el theme.js del
     // propio iframe con SU estado interno (sessionStorage/sistema) — no sabe
@@ -404,7 +441,7 @@
     var timeline = doc.querySelector('.timeline');
     if (timeline) timeline.innerHTML = experienceHtml(state.experience, lang, utils);
 
-    var section = doc.getElementById('proyectos');
+    var section = doc.getElementById('projects');
     if (section) {
       var grid = section.querySelector('.projects-grid');
       var existingFlagship = section.querySelector('.flagship');
@@ -503,8 +540,8 @@
   // sección correspondiente del sitio real — mismo espíritu que el
   // resaltado de campo↔vista previa, pero a nivel de sección completa.
   var SECTION_ANCHORS = {
-    hero: 'top', projects: 'proyectos', skills: 'stack',
-    experience: 'experiencia', education: 'formacion', contact: 'contacto',
+    hero: 'top', projects: 'projects', skills: 'skills',
+    experience: 'experience', education: 'education', contact: 'contact',
   };
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -530,9 +567,17 @@
   // notaría con listas largas. Se agrupan las reconstrucciones mientras el
   // admin sigue escribiendo y solo se dibuja una vez que hace una pausa.
   // mpv-admin:editlangchange es un clic explícito (no una ráfaga de teclas),
-  // así que ese sí se sigue redibujando de inmediato.
+  // así que ese sí se sigue redibujando de inmediato. Lo mismo para
+  // notifyChange(true) (ver admin-state.js) — un color elegido, un
+  // interruptor, etc. no son una ráfaga que agrupar, así que se dibujan sin
+  // esperar el agrupamiento.
   var renderDebounceTimer = null;
-  document.addEventListener('mpv-admin:change', function () {
+  document.addEventListener('mpv-admin:change', function (e) {
+    if (e.detail && e.detail.immediate) {
+      clearTimeout(renderDebounceTimer);
+      render();
+      return;
+    }
     clearTimeout(renderDebounceTimer);
     renderDebounceTimer = setTimeout(render, 120);
   });
