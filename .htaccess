@@ -57,6 +57,23 @@ Options -Indexes
     </IfModule>
 </FilesMatch>
 
+# Misma idea que el bloque de arriba, pero por extensión en vez de por nombre:
+# CLAUDE.md no empieza con punto, así que si algún día el despliegue a
+# producción es una copia manual del directorio (FTP/zip) en vez de un "git
+# pull" (que ya lo excluye vía .gitignore), quedaría descargable — documenta
+# en detalle el funcionamiento interno del gate/2FA/rate-limiting. Cubre
+# también volcados de BD (.sql) y logs (.log) que pudieran copiarse por error
+# fuera de database//src/, que ya tienen su propio "Require all denied".
+<FilesMatch "\.(md|sql|log)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 # Comprime la respuesta antes de mandarla (HTML/CSS/JS/JSON/SVG) — más
 # rápido de descargar sin cambiar ni un byte del contenido real, el
 # navegador la descomprime solo. Si el hosting no trae mod_deflate, este

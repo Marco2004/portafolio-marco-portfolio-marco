@@ -12,7 +12,11 @@ window.MPVAdminUpload = (function () {
       body: fd,
     }).then(function (res) {
       return res.json().then(function (json) {
-        if (!res.ok) throw new Error(json.error || t('admin.upload.error', 'Error al subir el archivo'));
+        if (!res.ok) {
+          var err = new Error(json.error || t('admin.upload.error', 'Error al subir el archivo'));
+          err.status = res.status;
+          throw err;
+        }
         return json;
       });
     });
@@ -33,6 +37,14 @@ window.MPVAdminUpload = (function () {
         window.MPVAdmin.notifyChange(true);
         window.MPVAdmin.showToast(t('admin.upload.success', 'Imagen actualizada correctamente'), false);
       }).catch(function (err) {
+        // Mismo criterio que admin-save.js: una sesión expirada (401) no
+        // debe dejar al admin viendo un error genérico sin pista de qué
+        // hacer — se le manda a login.php igual que al guardar cambios.
+        if (err.status === 401) {
+          window.MPVAdmin.showToast(t('admin.toast.sessionExpired', 'Tu sesión expiró por inactividad. Vamos a llevarte al login — lo que editaste no se pierde.'), true);
+          setTimeout(function () { window.location.href = 'login.php'; }, 1600);
+          return;
+        }
         window.MPVAdmin.showToast(err.message, true);
       });
     }

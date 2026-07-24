@@ -301,6 +301,44 @@ function validate_save_payload_limits(array $data): ?string {
 }
 
 /**
+ * Confirma que los subcampos que Portfolio::saveAll() pasa tal cual a
+ * funciones tipadas `array $a` (array_to_lines()/array_to_csv(), ver
+ * helpers.php) realmente sean arrays antes de tocar la base de datos. Sin
+ * esto, un payload con, por ejemplo, "bullets": "texto" en vez de una lista
+ * disparaba un TypeError a mitad de la transacción — saveAll() ya lo
+ * capturaba con su catch(Throwable) y revertía todo sin corromper nada, pero
+ * el cliente solo veía un 500 genérico en vez de un 422 con el campo exacto.
+ */
+function validate_save_payload_types(array $data): ?string {
+    foreach (($data['projects'] ?? []) as $p) {
+        if (isset($p['stack']) && !is_array($p['stack'])) {
+            return 'El campo "tecnologías" de un proyecto debe ser una lista.';
+        }
+        if (isset($p['buttons']) && !is_array($p['buttons'])) {
+            return 'Los botones de un proyecto deben ser una lista.';
+        }
+    }
+    foreach (($data['experience'] ?? []) as $x) {
+        foreach (['bullets', 'bulletsEn', 'metrics', 'metricsEn'] as $field) {
+            if (isset($x[$field]) && !is_array($x[$field])) {
+                return 'El campo "' . $field . '" de experiencia debe ser una lista.';
+            }
+        }
+    }
+    foreach (['languages', 'languagesEn'] as $field) {
+        if (isset($data['education'][$field]) && !is_array($data['education'][$field])) {
+            return 'El campo "' . $field . '" de educación debe ser una lista.';
+        }
+    }
+    foreach (($data['skills'] ?? []) as $cat) {
+        if (isset($cat['items']) && !is_array($cat['items'])) {
+            return 'Los skills de una categoría deben ser una lista.';
+        }
+    }
+    return null;
+}
+
+/**
  * Recorta un string al máximo de caracteres que su columna VARCHAR admite
  * en la base de datos, ANTES de intentar guardarlo — sin esto, un texto más
  * largo que la columna se comporta distinto según el servidor: algunos

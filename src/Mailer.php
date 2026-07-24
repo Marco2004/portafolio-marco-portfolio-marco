@@ -22,7 +22,7 @@ function send_email(string $to, string $subject, string $htmlBody): bool {
         'subject' => $subject,
         'htmlContent' => $htmlBody,
         'textContent' => strip_tags($htmlBody),
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 
     $ch = curl_init('https://api.brevo.com/v3/smtp/email');
     curl_setopt_array($ch, [

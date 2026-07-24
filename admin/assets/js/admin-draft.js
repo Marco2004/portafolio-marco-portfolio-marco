@@ -31,15 +31,19 @@
     return JSON.stringify(window.MPVAdmin.state);
   }
 
+  function t(key, fallback) {
+    return window.MPVAdminI18n ? window.MPVAdminI18n.t(key) : fallback;
+  }
+
   function showRestoreBanner(draftRaw) {
     var banner = document.createElement('div');
     banner.className = 'draft-banner';
     banner.setAttribute('role', 'status');
     banner.innerHTML =
-      '<span>Encontramos cambios sin guardar de una sesión anterior en este navegador.</span>' +
+      '<span>' + window.MPVEscape.html(t('admin.draft.found', 'Encontramos cambios sin guardar de una sesión anterior en este navegador.')) + '</span>' +
       '<div class="draft-banner__actions">' +
-        '<button type="button" data-draft-restore class="btn-secondary">Restaurar cambios</button>' +
-        '<button type="button" data-draft-discard class="btn-secondary">Descartar</button>' +
+        '<button type="button" data-draft-restore class="btn-secondary">' + window.MPVEscape.html(t('admin.draft.restore', 'Restaurar cambios')) + '</button>' +
+        '<button type="button" data-draft-discard class="btn-secondary">' + window.MPVEscape.html(t('admin.draft.discard', 'Descartar')) + '</button>' +
       '</div>';
     document.body.insertBefore(banner, document.body.firstChild);
 

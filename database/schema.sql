@@ -279,7 +279,11 @@ CREATE TABLE auth_tokens (
   consumed_at DATETIME NULL,
   attempts INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (admin_id) REFERENCES admin_users(id) ON DELETE CASCADE
+  FOREIGN KEY (admin_id) REFERENCES admin_users(id) ON DELETE CASCADE,
+  -- find_password_reset()/find_email_verification() (src/auth.php) filtran
+  -- por estas tres columnas sin admin_id (el token va hasheado, no se puede
+  -- buscar por igualdad) — sin este índice hacían table scan completo.
+  INDEX idx_purpose_consumed_expires (purpose, consumed_at, expires_at)
 ) ENGINE=InnoDB;
 
 -- Límite de intentos por IP (independiente del cooldown por sesión que ya
@@ -291,7 +295,12 @@ CREATE TABLE rate_limit_hits (
   id INT PRIMARY KEY AUTO_INCREMENT,
   bucket VARCHAR(60) NOT NULL,
   ip VARCHAR(45) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- Sin DEFAULT a propósito: rate_limit_hit() (src/auth.php) SIEMPRE escribe
+  -- este valor de forma explícita con el reloj de PHP (regla "reloj único"
+  -- del proyecto, ver CLAUDE.md) — un DEFAULT CURRENT_TIMESTAMP aquí sería
+  -- una trampa latente que dejaría el rate limit inefectivo en silencio si
+  -- algún día un INSERT futuro se olvida de mandar esta columna.
+  created_at DATETIME NOT NULL,
   INDEX idx_bucket_ip_time (bucket, ip, created_at)
 ) ENGINE=InnoDB;
 

@@ -27,6 +27,11 @@ if ($limitError !== null) {
     json_response(['error' => $limitError], 422);
 }
 
+$typeError = validate_save_payload_types($data);
+if ($typeError !== null) {
+    json_response(['error' => $typeError], 422);
+}
+
 try {
     Portfolio::saveAll($pdo, $data);
 } catch (Throwable $e) {

@@ -30,7 +30,22 @@ function load_env_file(string $path): void {
         }
         [$key, $value] = explode('=', $line, 2);
         $key = trim($key);
-        $value = trim(trim($value), "\"'");
+        $value = trim($value);
+        $quoted = $value !== '' && ($value[0] === '"' || $value[0] === "'");
+        if ($quoted) {
+            // Valor entre comillas: todo lo que sigue después de la comilla
+            // de cierre es un comentario (ej. KEY="valor" # nota) y se
+            // descarta; un "#" DENTRO de las comillas sí es parte del valor.
+            $quoteChar = $value[0];
+            $closing = strpos($value, $quoteChar, 1);
+            $value = $closing === false ? trim($value, "\"'") : substr($value, 1, $closing - 1);
+        } elseif (($hashPos = strpos($value, ' #')) !== false) {
+            // Sin comillas: " #" (espacio + almohadilla) marca un comentario
+            // al final de línea — antes se guardaba tal cual como parte del
+            // valor (ej. BREVO_API_KEY=xxxx # nota), rompiendo en silencio
+            // cualquier variable así de mal formada.
+            $value = rtrim(substr($value, 0, $hashPos));
+        }
         if ($key !== '' && getenv($key) === false) {
             putenv($key . '=' . $value);
             $_ENV[$key] = $value;

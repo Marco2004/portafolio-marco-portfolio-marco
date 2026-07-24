@@ -1390,23 +1390,13 @@
 
   /* ---------- modo de edición ES/EN ---------- */
 
-  function rerenderAllForEditLang() {
-    applySimpleFieldsLang();
-    renderHeroFacts();
-    renderProjects();
-    renderSkills();
-    renderExperience();
-    renderEducationEntries();
-    renderCerts();
-    renderLanguages();
-    renderContacts();
-  }
-
   /**
-   * Vuelve a dibujar todo el dashboard a partir del estado actual —lo usa
-   * admin-draft.js después de restaurar un borrador guardado en
-   * localStorage, ya que ese estado no llegó por el <script id="admin-data">
-   * que normalmente inicializa cada render* al cargar la página.
+   * Vuelve a dibujar todo el dashboard a partir del estado actual. Dos
+   * disparadores distintos la usan: admin-draft.js después de restaurar un
+   * borrador guardado en localStorage (ese estado no llegó por el
+   * <script id="admin-data"> que normalmente inicializa cada render* al
+   * cargar la página), y los eventos mpv-admin:editlangchange/langchange de
+   * abajo cuando cambia el idioma de edición o de interfaz.
    */
   function renderAll() {
     applySimpleFieldsLang();
@@ -1459,13 +1449,13 @@
     renderContacts();
     bindContactsList();
 
-    document.addEventListener('mpv-admin:editlangchange', rerenderAllForEditLang);
+    document.addEventListener('mpv-admin:editlangchange', renderAll);
     // Cambiar el idioma de INTERFAZ del dashboard (mpv-admin:langchange, ver
     // admin-i18n.js) también debe redibujar estos paneles — son 100% HTML
     // generado por este archivo, así que sin esto solo se traducía Inicio
     // (que usa data-i18n estático en admin/index.php) y el resto del
     // dashboard se quedaba en español sin importar el idioma elegido.
-    document.addEventListener('mpv-admin:langchange', rerenderAllForEditLang);
+    document.addEventListener('mpv-admin:langchange', renderAll);
   });
 
   window.MPVAdminForms = { renderAll: renderAll, findNeedsReviewSkill: findNeedsReviewSkill };

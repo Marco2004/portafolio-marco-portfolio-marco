@@ -16,8 +16,16 @@ $done = false;
 $tokenRow = $token !== '' ? find_password_reset($pdo, $token) : null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Mismo patrón que login_otp_verify en verify.php: el token de 256 bits
+    // ya hace el brute-force irreal, pero todo endpoint que consume un
+    // secreto de un solo uso lleva también un freno por IP en este proyecto.
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    $ipThrottled = rate_limit_hit($pdo, 'password_reset_confirm', $ip, 20, 15 * 60);
+
     if (!verify_csrf_field($_POST['csrf_token'] ?? null)) {
         $error = 'Token de seguridad inválido — recarga la página e intenta de nuevo.';
+    } elseif ($ipThrottled) {
+        $error = 'Demasiados intentos desde esta conexión — espera unos minutos e intenta de nuevo.';
     } elseif (!$tokenRow) {
         $error = 'Este enlace ya no es válido — pide uno nuevo.';
     } else {

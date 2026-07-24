@@ -357,6 +357,24 @@ funcione igual en hosts gratuitos que bloquean puertos SMTP salientes (ver
   intentos fallidos — ese bloqueo es por cuenta, así que no frenaba a quien
   probara muchos usuarios/correos distintos desde la misma conexión, ni a
   quien pidiera muchos códigos nuevos para volver a intentar 5 veces cada uno.
+  El POST que consume el token en `admin/reset-password.php` tiene el mismo
+  freno — antes era el único formulario de autenticación sin él.
+- **Expiración de tokens de recuperación de contraseña y verificación de
+  correo corregida a un único reloj** (el de PHP, nunca `NOW()` de MySQL) —
+  mismo bug ya documentado y corregido antes en el límite de solicitudes por
+  IP (`rate_limit_hits`), reaparecido en `find_password_reset()`/
+  `find_email_verification()` (`src/auth.php`): en un servidor donde el
+  reloj de PHP y el de MySQL no coincidan exactamente (como este mismo
+  entorno de desarrollo), un enlace de recuperación o verificación seguía
+  siendo válido horas más de lo que indicaba su vencimiento real
+  (`PASSWORD_RESET_TTL_MINUTES`/`EMAIL_VERIFY_TTL_MINUTES`). Ver
+  `database/migrations/2026_07_24_clock_and_index.sql` para aplicar el
+  ajuste de esquema relacionado en una base de datos ya existente.
+- **`.htaccess` también bloquea por extensión** (`.md`, `.sql`, `.log`),
+  además de por nombre de dotfile — así un despliegue que copie el proyecto
+  por FTP/ZIP en vez de `git pull` no deja documentación interna, volcados
+  de base de datos ni logs descargables por HTTP solo porque su nombre no
+  empieza con punto.
 - **Cerrar sesión ahora exige CSRF** (formulario con token, no un simple
   `<a href="logout.php">`) — antes cualquier página externa podía forzar el
   cierre de sesión del admin con solo hacer que su navegador pidiera esa URL
@@ -852,7 +870,24 @@ with Brevo" footer to every email — informational, not a bug.
   the existing per-account lockout after repeated failures — that lockout
   is per-account, so it didn't slow down probing many different
   usernames/emails from the same connection, or requesting many fresh codes
-  to get 5 more guesses each time.
+  to get 5 more guesses each time. The POST that consumes the token in
+  `admin/reset-password.php` carries the same throttle — previously the
+  only auth form without one.
+- **Password-reset and email-verification token expiry fixed to a single
+  clock** (PHP's, never MySQL's `NOW()`) — the same bug already documented
+  and fixed once in the per-IP rate limit (`rate_limit_hits`), which had
+  resurfaced in `find_password_reset()`/`find_email_verification()`
+  (`src/auth.php`): on a server where PHP's clock and MySQL's don't match
+  exactly (as in this very development environment), a recovery or
+  verification link stayed valid for hours longer than its real expiry
+  (`PASSWORD_RESET_TTL_MINUTES`/`EMAIL_VERIFY_TTL_MINUTES`) suggested. See
+  `database/migrations/2026_07_24_clock_and_index.sql` to apply the related
+  schema tweak on an existing database.
+- **`.htaccess` also blocks by extension** (`.md`, `.sql`, `.log`), on top
+  of blocking by dotfile name — so a deploy that copies the project via
+  FTP/ZIP instead of `git pull` doesn't leave internal docs, database
+  dumps, or logs downloadable over HTTP just because their name doesn't
+  start with a dot.
 - **Logging out now requires CSRF** (a token-carrying form, not a plain
   `<a href="logout.php">`) — previously any external page could force the
   admin's session to close just by getting their browser to request that

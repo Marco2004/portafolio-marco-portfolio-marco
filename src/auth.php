@@ -421,7 +421,8 @@ function verify_login_otp(PDO $pdo, int $adminId, string $code): bool {
         log_security_event('otp_failed', ['admin_id' => $adminId]);
         return false;
     }
-    $pdo->prepare('UPDATE auth_tokens SET consumed_at = NOW() WHERE id = :id')->execute(['id' => $row['id']]);
+    $pdo->prepare('UPDATE auth_tokens SET consumed_at = :now WHERE id = :id')
+        ->execute(['now' => date('Y-m-d H:i:s'), 'id' => $row['id']]);
     return true;
 }
 
@@ -528,10 +529,17 @@ function create_password_reset_token(PDO $pdo, int $adminId): string {
  * Busca entre los tokens de recuperación vigentes cuál corresponde al valor
  * recibido por URL (hay que probarlos todos porque están hasheados, no se
  * puede buscar por igualdad directa en SQL).
+ *
+ * expires_at se compara contra el reloj de PHP (:now), nunca contra NOW() de
+ * MySQL — mismo criterio no negociable que rate_limit_hit() (ver su
+ * docblock): expires_at siempre se escribió con date() de PHP
+ * (create_password_reset_token()), así que compararlo contra el reloj de
+ * MySQL podía dejar el token "vigente" horas de más o de menos si ambos
+ * relojes no coinciden exactamente, como pasa en este mismo servidor XAMPP.
  */
 function find_password_reset(PDO $pdo, string $token): ?array {
-    $stmt = $pdo->prepare("SELECT * FROM auth_tokens WHERE purpose = 'password_reset' AND consumed_at IS NULL AND expires_at > NOW()");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM auth_tokens WHERE purpose = 'password_reset' AND consumed_at IS NULL AND expires_at > :now");
+    $stmt->execute(['now' => date('Y-m-d H:i:s')]);
     foreach ($stmt->fetchAll() as $row) {
         if (password_verify($token, $row['token_hash'])) {
             return $row;
@@ -545,7 +553,8 @@ function consume_password_reset(PDO $pdo, int $tokenId, int $adminId, string $ne
     try {
         $pdo->prepare('UPDATE admin_users SET password_hash = :h, failed_attempts = 0, locked_until = NULL WHERE id = :id')
             ->execute(['h' => password_hash($newPassword, PASSWORD_DEFAULT), 'id' => $adminId]);
-        $pdo->prepare('UPDATE auth_tokens SET consumed_at = NOW() WHERE id = :id')->execute(['id' => $tokenId]);
+        $pdo->prepare('UPDATE auth_tokens SET consumed_at = :now WHERE id = :id')
+            ->execute(['now' => date('Y-m-d H:i:s'), 'id' => $tokenId]);
         // Una contraseña olvidada puede significar cuenta comprometida:
         // invalida sesiones futuras vía dispositivos confiables y OTPs pendientes.
         $pdo->prepare('DELETE FROM trusted_devices WHERE admin_id = :id')->execute(['id' => $adminId]);
@@ -577,10 +586,12 @@ function create_email_verification_token(PDO $pdo, int $adminId): string {
 /**
  * Igual que find_password_reset(): hay que probar todos los tokens vigentes
  * porque están hasheados, no se puede buscar por igualdad directa en SQL.
+ * Mismo criterio de reloj de PHP en la comparación de expires_at — ver el
+ * docblock de find_password_reset().
  */
 function find_email_verification(PDO $pdo, string $token): ?array {
-    $stmt = $pdo->prepare("SELECT * FROM auth_tokens WHERE purpose = 'email_verify' AND consumed_at IS NULL AND expires_at > NOW()");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM auth_tokens WHERE purpose = 'email_verify' AND consumed_at IS NULL AND expires_at > :now");
+    $stmt->execute(['now' => date('Y-m-d H:i:s')]);
     foreach ($stmt->fetchAll() as $row) {
         if (password_verify($token, $row['token_hash'])) {
             return $row;
@@ -592,8 +603,9 @@ function find_email_verification(PDO $pdo, string $token): ?array {
 function consume_email_verification(PDO $pdo, int $tokenId, int $adminId): void {
     $pdo->beginTransaction();
     try {
-        $pdo->prepare('UPDATE admin_users SET email_verified_at = NOW() WHERE id = :id')->execute(['id' => $adminId]);
-        $pdo->prepare('UPDATE auth_tokens SET consumed_at = NOW() WHERE id = :id')->execute(['id' => $tokenId]);
+        $now = date('Y-m-d H:i:s');
+        $pdo->prepare('UPDATE admin_users SET email_verified_at = :now WHERE id = :id')->execute(['now' => $now, 'id' => $adminId]);
+        $pdo->prepare('UPDATE auth_tokens SET consumed_at = :now WHERE id = :id')->execute(['now' => $now, 'id' => $tokenId]);
         $pdo->commit();
         log_security_event('email_verified', ['admin_id' => $adminId]);
     } catch (Throwable $e) {

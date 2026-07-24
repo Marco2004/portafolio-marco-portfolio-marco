@@ -99,6 +99,9 @@
   "admin.toast.saveError": "Error al guardar los cambios",
   "admin.toast.needsReviewError": "No se puede guardar: la habilidad \"%NAME%\" usa un nivel que ya no existe. Corrígelo antes de guardar.",
   "admin.toast.sessionExpired": "Tu sesión expiró por inactividad. Vamos a llevarte al login — lo que editaste no se pierde.",
+  "admin.draft.found": "Encontramos cambios sin guardar de una sesión anterior en este navegador.",
+  "admin.draft.restore": "Restaurar cambios",
+  "admin.draft.discard": "Descartar",
 
   "admin.editLangBanner.before": "Estás editando el contenido en",
   "admin.editLangBanner.after": "— lo que escribas en los campos marcados como traducibles se guarda como la versión en %LANG%. Los campos que no cambian entre idiomas (URLs, tecnologías, fechas, datos de contacto) se ven igual en ambos modos.",

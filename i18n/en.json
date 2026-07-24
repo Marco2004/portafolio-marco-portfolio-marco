@@ -99,6 +99,9 @@
   "admin.toast.saveError": "Error saving changes",
   "admin.toast.needsReviewError": "Can't save: skill \"%NAME%\" uses a level that no longer exists. Fix it before saving.",
   "admin.toast.sessionExpired": "Your session expired from inactivity. Taking you to login — what you edited isn't lost.",
+  "admin.draft.found": "We found unsaved changes from a previous session in this browser.",
+  "admin.draft.restore": "Restore changes",
+  "admin.draft.discard": "Discard",
 
   "admin.editLangBanner.before": "You are editing content in",
   "admin.editLangBanner.after": "— what you type in fields marked as translatable is saved as the %LANG% version. Fields that don't change between languages (URLs, technologies, dates, contact details) look the same in both modes.",
