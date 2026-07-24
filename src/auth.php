@@ -104,6 +104,18 @@ function require_admin_gate(): void {
 
     $key = $_GET['key'] ?? null;
     if ($key !== null) {
+        // Mismo límite por IP que ya protege login_attempt (20/15min, ver
+        // admin/login.php) — ADMIN_ACCESS_KEY es una cadena que el operador
+        // escribe a mano en .env, sin garantía de longitud/entropía como un
+        // hash o token generado; sin este freno, cada intento fallido es una
+        // respuesta 404 casi instantánea (sin bcrypt ni consulta a BD de por
+        // medio) que un bot podría probar a la velocidad de la red.
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        if (rate_limit_hit(get_pdo(), 'admin_gate', $ip, 20, 15 * 60)) {
+            log_security_event('admin_gate_rate_limited');
+            http_response_code(404);
+            exit;
+        }
         if (!hash_equals(ADMIN_ACCESS_KEY, $key)) {
             log_security_event('admin_gate_denied');
             http_response_code(404);
@@ -248,7 +260,19 @@ const COMMON_PASSWORDS = [
  * ventana de incógnito), esto vive en la base de datos por IP.
  */
 function rate_limit_hit(PDO $pdo, string $bucket, string $ip, int $maxHits, int $windowSeconds): bool {
-    $pdo->prepare('INSERT INTO rate_limit_hits (bucket, ip) VALUES (:b, :ip)')->execute(['b' => $bucket, 'ip' => $ip]);
+    // created_at se manda explícito con el reloj de PHP (nunca el DEFAULT
+    // current_timestamp() de la columna, que usaría el reloj de MySQL) —
+    // mismo criterio que el resto del proyecto (auth_tokens.expires_at,
+    // admin_users.locked_until) para que esta comparación y la de abajo
+    // corran siempre contra el mismo reloj. Se detectó en vivo que sin esto
+    // el límite nunca se activaba en este servidor: PHP y MySQL corren en
+    // zonas horarias distintas (PHP 8h adelante), así que created_at (reloj
+    // de MySQL) siempre quedaba fuera de la ventana calculada con el reloj
+    // de PHP — el conteo de abajo nunca pasaba de 0 sin importar cuántas
+    // filas hubiera.
+    $now = date('Y-m-d H:i:s');
+    $pdo->prepare('INSERT INTO rate_limit_hits (bucket, ip, created_at) VALUES (:b, :ip, :now)')
+        ->execute(['b' => $bucket, 'ip' => $ip, 'now' => $now]);
 
     $cutoff = date('Y-m-d H:i:s', time() - $windowSeconds);
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM rate_limit_hits WHERE bucket = :b AND ip = :ip AND created_at > :cutoff');

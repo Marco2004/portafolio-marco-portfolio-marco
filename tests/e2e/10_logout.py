@@ -3,6 +3,14 @@ y confirma que volver a /admin/index.php después ya no funciona. Se corre al
 final porque revoca el "recordar este dispositivo" que las pruebas
 anteriores dependían de tener activo.
 
+Nota: el selector del botón es '.sidebar__logout-form button[type="submit"]',
+no un simple 'a[href="logout.php"]' — el logout se cambió de un <a> a un
+<form method="post"> con CSRF (ver admin/index.php y el comentario de
+logout.php) precisamente para cerrar un CSRF de logout; este script quedó
+apuntando al selector viejo por un tiempo después de ese cambio, sin fallar
+de forma obvia (Playwright solo daba timeout esperando un elemento que ya no
+existía).
+
 Nota de la auditoría: la primera corrida de este script encontró un bug real
 — tras el logout, /admin/index.php no redirigía a login.php, sino que
 devolvía 404 en blanco. Causa: require_admin_gate() en src/auth.php ponía el
@@ -29,7 +37,7 @@ with sync_playwright() as p:
     page.wait_for_load_state("networkidle")
     assert "login.php" not in page.url, "no logueado antes de probar logout"
 
-    page.click('a[href="logout.php"]')
+    page.click('.sidebar__logout-form button[type="submit"]')
     page.wait_for_load_state("networkidle")
     print("logout -> URL final:", page.url, "->", "OK" if "login.php" in page.url else "FALLO")
 
