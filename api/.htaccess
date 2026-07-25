@@ -5,6 +5,13 @@
 # etc.), esta línea lo garantiza también aquí sin depender de eso.
 Options -Indexes
 
+# noindex vía cabecera en vez de listar /api/ en robots.txt: mismo motivo que
+# admin/.htaccess — no regalar la ruta en un archivo público que cualquiera
+# lee antes de tocar nada.
+<IfModule mod_headers.c>
+    Header set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+
 # Bloquea servir por HTTP cualquier archivo de respaldo/editor que pudiera
 # quedar suelto en esta carpeta — nunca debería pasar, pero si pasa, no debe
 # quedar descargable en texto plano.

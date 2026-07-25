@@ -5,6 +5,14 @@
 # etc.), esta línea lo garantiza también aquí sin depender de eso.
 Options -Indexes
 
+# noindex vía cabecera en vez de listar /admin/ en robots.txt: robots.txt es
+# público y leerlo es lo primero que hace un atacante, así que ponerlo ahí es
+# regalarle la ruta antes de que toque nada. La cabecera solo la ve quien ya
+# está pidiendo esta URL directamente.
+<IfModule mod_headers.c>
+    Header set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+
 # Bloquea servir por HTTP cualquier archivo de respaldo/editor que pudiera
 # quedar suelto en esta carpeta (ej. login.php.bak, .login.php.swp) — nunca
 # debería pasar, pero si pasa, no debe quedar descargable en texto plano.

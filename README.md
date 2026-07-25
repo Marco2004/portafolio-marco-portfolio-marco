@@ -379,6 +379,13 @@ funcione igual en hosts gratuitos que bloquean puertos SMTP salientes (ver
   `<a href="logout.php">`) — antes cualquier página externa podía forzar el
   cierre de sesión del admin con solo hacer que su navegador pidiera esa URL
   (impacto bajo, una desconexión forzada, pero sin motivo para dejarlo así).
+- **`robots.txt` ya no lista `/admin/` ni `/api/`**: antes tenía
+  `Disallow: /admin/` y `Disallow: /api/`, pero ese archivo es público —
+  cualquiera puede leerlo, así que era confirmarle esas rutas a un escáner
+  antes de que probara nada. El "no indexar" para buscadores ahora lo hace
+  la cabecera `X-Robots-Tag: noindex, nofollow` en las respuestas de esas
+  carpetas (`admin/.htaccess`, `api/.htaccess`) — mismo efecto en SEO, sin
+  anunciar la ruta en un archivo que cualquiera lee.
 - **Todo texto libre se recorta al tamaño real de su columna antes de
   guardarlo** (`cap()` en `src/helpers.php`, usado en todo
   `Portfolio::saveAll()`) — antes, un texto más largo que su columna
@@ -892,6 +899,13 @@ with Brevo" footer to every email — informational, not a bug.
   `<a href="logout.php">`) — previously any external page could force the
   admin's session to close just by getting their browser to request that
   URL (low impact, a forced disconnect, but no reason to leave it that way).
+- **`robots.txt` no longer lists `/admin/` or `/api/`**: it used to have
+  `Disallow: /admin/` and `Disallow: /api/`, but that file is public —
+  anyone can read it, so it was confirming those paths to a scanner before
+  it even probed anything. Keeping search engines from indexing them is now
+  done via the `X-Robots-Tag: noindex, nofollow` header on those folders'
+  responses (`admin/.htaccess`, `api/.htaccess`) — same SEO effect, without
+  announcing the path in a file anyone can read.
 - **All free text is capped to its column's real size before saving**
   (`cap()` in `src/helpers.php`, used throughout `Portfolio::saveAll()`) —
   previously, text longer than its column depended on the MySQL/MariaDB

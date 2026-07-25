@@ -14,6 +14,14 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
+// Reloj único explícito: todo date()/time() del proyecto (expiración de
+// tokens, rate limiting, y la hora que se muestra en los correos — ver
+// src/Mailer.php) debe usar siempre esta zona sin depender del date.timezone
+// del php.ini de cada servidor, que varía entre XAMPP local y el hosting real
+// (fue justo esa diferencia la causa del desfase de 8h ya documentado entre
+// PHP y MySQL). Cambiar solo si el admin real deja de operar desde México.
+date_default_timezone_set('America/Mexico_City');
+
 /**
  * Carga pares KEY=VALUE de un archivo ".env" simple hacia getenv()/$_ENV.
  * No sobreescribe una variable que ya exista en el entorno (permite que el
