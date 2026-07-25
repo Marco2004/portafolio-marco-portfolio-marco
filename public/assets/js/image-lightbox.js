@@ -20,6 +20,20 @@
 
     var lastFocused = null;
 
+    // Rastrea si la ultima interaccion real en la pagina fue teclado (Tab) o
+    // mouse. Alt+Tab entre ventanas no dispara ni keydown ni mousedown aqui,
+    // asi que el valor se queda como estaba antes de cambiar de ventana --a
+    // diferencia de intentar limpiar la supresion del anillo solo una vez en
+    // el "blur" del cierre, que un ciclo de blur/focus por cambio de ventana
+    // deshacia, revivor el anillo sin que el usuario tocara nada.
+    var keyboardModality = false;
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Tab') keyboardModality = true;
+    });
+    document.addEventListener('mousedown', function () {
+      keyboardModality = false;
+    });
+
     function open(trigger) {
       lastFocused = trigger;
       img.src = trigger.currentSrc || trigger.src;
@@ -62,6 +76,13 @@
           e.preventDefault();
           open(el);
         }
+      });
+      // El anillo de :focus-visible (base.css) solo debe verse si de verdad
+      // se llego aqui navegando con teclado. Se recalcula en cada foco (no
+      // solo al volver del lightbox) para que tambien cubra el caso de
+      // tabular directo a la imagen sin pasar por el lightbox.
+      el.addEventListener('focus', function () {
+        el.classList.toggle('image-lightbox-trigger--no-ring', !keyboardModality);
       });
     });
 

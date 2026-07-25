@@ -10,6 +10,14 @@
   cursor: zoom-in;
 }
 
+/* Ver image-lightbox.js: al devolver el foco a la imagen al cerrar el
+   lightbox (para no romper el orden de Tab), se suprime el anillo de
+   :focus-visible de base.css cuando la ultima interaccion real fue con
+   mouse -- si no, se leeria como un hover atorado en la imagen. */
+.image-lightbox-trigger--no-ring:focus-visible {
+  outline: none;
+}
+
 .image-lightbox {
   position: fixed;
   inset: 0;
