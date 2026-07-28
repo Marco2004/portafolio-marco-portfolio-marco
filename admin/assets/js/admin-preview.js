@@ -172,9 +172,11 @@
         '</div>' +
         '<div class="project-card__body">' +
           '<div class="project-card__head"><h3 class="project-card__title">' + escapeHtml(p.title) + '</h3><span class="project-card__tag">' + escapeHtml(p.tag) + '</span></div>' +
-          '<p class="project-card__text"><strong>' + escapeHtml(i18n['proj.what.l']) + '</strong> <span' + dynAttrs(p.what, p.whatEn) + '>' + escapeHtml(pick(p.what, p.whatEn, lang)) + '</span></p>' +
-          '<p class="project-card__text"><strong>' + escapeHtml(i18n['proj.mine.l']) + '</strong> <span' + dynAttrs(p.mine, p.mineEn) + '>' + escapeHtml(pick(p.mine, p.mineEn, lang)) + '</span></p>' +
-          '<p class="project-card__impact"><span class="project-card__impact-label">' + escapeHtml(i18n['imp.label']) + '</span><span' + dynAttrs(p.impact, p.impactEn) + '>' + escapeHtml(pick(p.impact, p.impactEn, lang)) + '</span></p>' +
+          '<div class="project-card__desc">' +
+            '<p class="project-card__text"><strong>' + escapeHtml(i18n['proj.what.l']) + '</strong> <span' + dynAttrs(p.what, p.whatEn) + '>' + escapeHtml(pick(p.what, p.whatEn, lang)) + '</span></p>' +
+            '<p class="project-card__text"><strong>' + escapeHtml(i18n['proj.mine.l']) + '</strong> <span' + dynAttrs(p.mine, p.mineEn) + '>' + escapeHtml(pick(p.mine, p.mineEn, lang)) + '</span></p>' +
+            '<p class="project-card__impact"><span class="project-card__impact-label">' + escapeHtml(i18n['imp.label']) + '</span><span' + dynAttrs(p.impact, p.impactEn) + '>' + escapeHtml(pick(p.impact, p.impactEn, lang)) + '</span></p>' +
+          '</div>' +
           '<div class="project-card__stack">' + chips + '</div>' +
           '<div class="project-card__cta">' + ctaHtml + '</div>' +
         '</div>' +

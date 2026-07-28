@@ -14,6 +14,17 @@
     min-height: 200px;
   }
 
+  /* .project-card usa 4/5 en escritorio (ver projects.css), pensado para el
+     ancho mínimo de la tarjeta a 3 por fila (~320px) — en móvil, con una
+     sola columna angosta (~90% del viewport, a veces incluso menor a esos
+     320px), esa misma proporción deja el bloque imagen+encabezado+chips+CTA
+     sin espacio para el texto (y en el peor caso, el CTA se recorta). Aquí
+     vuelve a una figura más alta, ya validada como segura sin importar
+     cuánto texto tenga cada proyecto. */
+  .project-card {
+    aspect-ratio: 3 / 4;
+  }
+
   .timeline-item {
     grid-template-columns: 1fr;
     gap: 8px;

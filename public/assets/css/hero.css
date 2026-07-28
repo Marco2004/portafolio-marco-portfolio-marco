@@ -163,6 +163,26 @@ body.is-preview .hero {
   overflow-x: auto;
   flex: 1;
   min-width: 0;
+  /* Mismo resalte que .project-card__desc (ver projects.css): var(--soft)
+     en vez del var(--border-2) que usa el scrollbar del resto del sitio
+     (base.css) — ahí casi no contrasta en modo claro contra el panel, y
+     aquí es la única pista de que el texto tecleado por el typewriter se
+     puede desplazar en vez de estar cortado. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--soft) transparent;
+}
+.hero__code-pre::-webkit-scrollbar {
+  height: 6px;
+}
+.hero__code-pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+.hero__code-pre::-webkit-scrollbar-thumb {
+  background: var(--soft);
+  border-radius: 999px;
+}
+.hero__code-pre::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 .hero__cta {

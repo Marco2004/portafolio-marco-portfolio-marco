@@ -128,6 +128,8 @@
 
 .projects-grid {
   display: grid;
+  /* 3 por fila en el ancho típico de escritorio de esta sección — con un
+     mínimo mayor caían a solo 2, que se ve peor para esta sección. */
   grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: 22px;
 }
@@ -139,6 +141,17 @@
   background: var(--panel);
   display: flex;
   flex-direction: column;
+  /* Misma figura para todas las tarjetas sin importar cuánto texto tenga
+     cada proyecto — a diferencia del insignia (que sí puede crecer, es la
+     tarjeta destacada), estas deben verse consistentes entre sí. El texto
+     que no quepa nunca se pierde: se desplaza dentro de su propio recuadro
+     con scroll (.project-card__desc), no se recorta con "...". 4/5 es el
+     límite real a 3 por fila: con la tarjeta más angosta posible aquí
+     (320px, justo antes de que el grid caiga a 2 por fila) ya es la
+     proporción menos alta que cabe sin que el CTA (Demo/Código) quede sin
+     espacio y se recorte — probado con Playwright en ese ancho exacto.
+     Ir más horizontal (1:1 o más ancha) requeriría 2 por fila en vez de 3. */
+  aspect-ratio: 4 / 5;
   transition: transform var(--duration-base) ease, border-color var(--duration-base) ease, box-shadow var(--duration-base) ease;
 }
 .project-card:hover {
@@ -156,7 +169,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 9px 12px;
+  padding: 7px 10px;
 }
 
 .project-card__domain {
@@ -168,18 +181,19 @@
 
 .project-card__image {
   width: 100%;
-  height: 158px;
+  height: 100px;
   object-fit: cover;
   background: var(--bg-2);
   display: block;
 }
 
 .project-card__body {
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
+  min-height: 0;
 }
 
 .project-card__head {
@@ -203,6 +217,43 @@
   border-radius: 999px;
   padding: 3px 10px;
   white-space: nowrap;
+}
+
+/* Única zona con scroll propio dentro de la tarjeta: crece para llenar el
+   espacio disponible entre el encabezado y los chips/CTA (que siempre
+   quedan visibles), y si el contenido no cabe se desplaza internamente en
+   vez de estirar la tarjeta o cortar el texto. */
+.project-card__desc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  /* overflow-y:auto por sí solo no deja rastro visible en varios sistemas
+     (scrollbar superpuesta que solo aparece al pasar el mouse) — sin esto,
+     un texto que no cabe se ve idéntico a uno recortado. Con scrollbar
+     siempre visible cuando sí hay overflow, queda claro que hay más
+     contenido debajo. var(--soft) en vez de var(--border-2) (el color que
+     usa el scrollbar del resto del sitio en base.css): border-2 en modo
+     claro (#d8dee4) casi no contrasta contra el panel (#f6f8fa) — aquí sí
+     necesita notarse porque es la única pista de que hay más texto. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--soft) transparent;
+}
+.project-card__desc::-webkit-scrollbar {
+  width: 6px;
+}
+.project-card__desc::-webkit-scrollbar-track {
+  background: transparent;
+}
+.project-card__desc::-webkit-scrollbar-thumb {
+  background: var(--soft);
+  border-radius: 999px;
+}
+.project-card__desc::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 
 .project-card__text {
@@ -235,7 +286,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  margin-top: auto;
 }
 
 .chip {

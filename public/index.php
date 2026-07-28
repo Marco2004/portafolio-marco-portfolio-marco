@@ -303,9 +303,11 @@ $ogImageUrl = site_url('/assets/img/favicon/og-image.png');
             <h3 class="project-card__title"><?= e($p['title']) ?></h3>
             <span class="project-card__tag"><?= e($p['tag']) ?></span>
           </div>
-          <p class="project-card__text"><strong data-i18n="proj.what.l"><?= e($i18n[$lang]['proj.what.l']) ?></strong> <span<?= dyn_attrs($p['what'], $p['whatEn']) ?>><?= e(t($p['what'], $p['whatEn'], $lang)) ?></span></p>
-          <p class="project-card__text"><strong data-i18n="proj.mine.l"><?= e($i18n[$lang]['proj.mine.l']) ?></strong> <span<?= dyn_attrs($p['mine'], $p['mineEn']) ?>><?= e(t($p['mine'], $p['mineEn'], $lang)) ?></span></p>
-          <p class="project-card__impact"><span class="project-card__impact-label" data-i18n="imp.label"><?= e($i18n[$lang]['imp.label']) ?></span><span<?= dyn_attrs($p['impact'], $p['impactEn']) ?>><?= e(t($p['impact'], $p['impactEn'], $lang)) ?></span></p>
+          <div class="project-card__desc">
+            <p class="project-card__text"><strong data-i18n="proj.what.l"><?= e($i18n[$lang]['proj.what.l']) ?></strong> <span<?= dyn_attrs($p['what'], $p['whatEn']) ?>><?= e(t($p['what'], $p['whatEn'], $lang)) ?></span></p>
+            <p class="project-card__text"><strong data-i18n="proj.mine.l"><?= e($i18n[$lang]['proj.mine.l']) ?></strong> <span<?= dyn_attrs($p['mine'], $p['mineEn']) ?>><?= e(t($p['mine'], $p['mineEn'], $lang)) ?></span></p>
+            <p class="project-card__impact"><span class="project-card__impact-label" data-i18n="imp.label"><?= e($i18n[$lang]['imp.label']) ?></span><span<?= dyn_attrs($p['impact'], $p['impactEn']) ?>><?= e(t($p['impact'], $p['impactEn'], $lang)) ?></span></p>
+          </div>
           <div class="project-card__stack">
             <?php foreach ($p['stack'] as $tech): ?>
               <span class="chip"><?= e($tech) ?></span>
